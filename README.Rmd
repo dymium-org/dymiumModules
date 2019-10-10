@@ -1,0 +1,30 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# dymiumModules
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+A repository for sharing dymium modules.
+
+# Create a new module
+
+```{r, eval = FALSE}
+library("dymiumCore")
+create_new_module(name = "demography", 
+                  event = c("age", "birth", "death", "marriage", "cohabit",
+                            "separate", "divorce", "breakup", "leavehome", 
+                            "migrate", "emigrate"), 
+                  path = "modules")
+```
