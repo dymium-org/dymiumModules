@@ -19,3 +19,12 @@ create_new_module(name = "demography",
                             "migrate", "emigrate"), 
                   path = "modules")
 ```
+
+Completed modules
+- 'Demography' module (private)
+- 'Socionomic' module (private)
+- 'MATSim' module (private)
+
+In-development
+- 'Firmography' module (private)
+- 'Market interaction' module (private)
