@@ -3,3 +3,6 @@
 .RData
 .Ruserdata
 .Rprofile
+modules/matsim/matsim/*
+modules/matsim/create-demand/*
+output
