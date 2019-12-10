@@ -43,4 +43,8 @@ calling`?download\_module\`.
 
 # Module directory
 
-  - (demography)\[<https://github.com/dymium-org/dymiumModules/tree/master/modules/demography>\]
+  - [demography](https://github.com/dymium-org/dymiumModules/tree/master/modules/demography):
+    demographic processes for simulating population and household
+    dynamics.
+  - [matsim](https://github.com/dymium-org/dymiumModules/tree/master/modules/matsim):
+    an agent-based traffic simulator.
