@@ -7,26 +7,20 @@
 
 <!-- badges: end -->
 
-A repository for sharing dymium modules.
+A repository for sharing modules developed with dymiumCore. To share
+your module in this repository please send in your module as a pull
+request.
 
 # Create a new module
 
 ``` r
 library("dymiumCore")
-create_new_module(name = "demography", 
-                  event = c("age", "birth", "death", "marriage", "cohabit",
-                            "separate", "divorce", "breakup", "leavehome", 
-                            "migrate", "emigrate"), 
-                  path = "modules")
+use_module(name = "mymodule")
+use_event("event1", "mymodule")
+use_event("event2", "mymodule", with_comments = TRUE) # with recommendations
+use_event("event3", "mymodule", with_comments = FALSE) # without recommendations
 ```
 
-# Modules
+# Module directory
 
-## Completed modules
-- 'Demography' module (private by asiripanich)
-- 'Socioeconomic' module (private by asiripanich)
-- 'MATSim' module (private by asiripanich)
-
-## Modules in development
-- 'Firmography' module (private by asiripanich)
-- 'Market interaction' module (private by asiripanich)
+  - (demography)\[<https://github.com/dymium-org/dymiumModules/tree/master/modules/demography>\]
