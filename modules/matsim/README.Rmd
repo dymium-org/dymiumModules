@@ -57,18 +57,18 @@ event_matsim_runcontroler$run(world, model = NULL, target = NULL, time_steps = N
 
 ### Parameters
 
-* object: a [World] object.
-* model: a named list that contains path to a MATSim config file.
+* __world__: a World object.
+* __model__: a named list that contains path to a MATSim config file.
+  - _config_: a path to a matsim config file
+  - _lastIteration_: a numeric value that denotes the number of iterations for matsim to run
 
 ```{r eval = FALSE}
-# config: path to a matsim config file
-# lastIteration: a numeric value that denotes the number of iterations for matsim to run
 model <- list(config = "path/to/config.xml",
               lastIteration = 10)
 ```
 
-* target: NULL
-* time_steps: a integer vector that contains the time steps in which this event
+* __target__: NULL
+* __time_steps__: a integer vector that contains the time steps in which this event
 should be run.
 
 
@@ -124,12 +124,12 @@ event_matsim_createVISTADemand$run(world, model = NULL, target = NULL, time_step
 
 ### Parameters
 
-* object: a World object.
+* world: a World object.
 * model: a named list.
+  - _vista_persons_: a data.frame that contains a vista person file 
+  - _vista_trips_: a data.frame that contains a vista trip file
 
 ```{r eval = FALSE}
-# vista_persons: a data.frame that contains a vista person file 
-# vista_trips: a data.frame that contains a vista trip file
 model <- list(vista_persons = data.frame(),
               vista_trips = data.frame())
 ```
@@ -195,4 +195,4 @@ It may be a good idea to run the following command in your Terminal.
 R CMD javareconf
 ```
 
-Then quite RStudio and launch in again to try `library(rJava)`. If the error still presist then Google search is your best friend!
+Then quit RStudio and launch it again to try `library(rJava)`. If the error still persist then Google search is your best friend!

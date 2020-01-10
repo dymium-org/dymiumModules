@@ -54,7 +54,7 @@ This module provides the following functionalities:
     that is required to make this module works. The user must download
     MATSim from [MATSim website](https://www.matsim.org/downloads/). I
     recommend to use the latest stable release (version 0.10.0 as of
-    2020-01-10) with this module. Once, you have downloaded MATSim you
+    2020-01-11) with this module. Once, you have downloaded MATSim you
     must extract the matsim zip file into your matsim module folder
     (usually under the root folder of your active R project
     `modules/matsim`). Then rename the extracted file as ‘matsim’. Then
@@ -73,21 +73,22 @@ event_matsim_runcontroler$run(world, model = NULL, target = NULL, time_steps = N
 
 ### Parameters
 
-  - object: a \[World\] object.
-  - model: a named list that contains path to a MATSim config file.
+  - **world**: a World object.
+  - **model**: a named list that contains path to a MATSim config file.
+      - *config*: a path to a matsim config file
+      - *lastIteration*: a numeric value that denotes the number of
+        iterations for matsim to run
 
 <!-- end list -->
 
 ``` r
-# config: path to a matsim config file
-# lastIteration: a numeric value that denotes the number of iterations for matsim to run
 model <- list(config = "path/to/config.xml",
               lastIteration = 10)
 ```
 
-  - target: NULL
-  - time\_steps: a integer vector that contains the time steps in which
-    this event should be run.
+  - **target**: NULL
+  - **time\_steps**: a integer vector that contains the time steps in
+    which this event should be run.
 
 ### Description
 
@@ -156,14 +157,14 @@ event_matsim_createVISTADemand$run(world, model = NULL, target = NULL, time_step
 
 ### Parameters
 
-  - object: a World object.
+  - world: a World object.
   - model: a named list.
+      - *vista\_persons*: a data.frame that contains a vista person file
+      - *vista\_trips*: a data.frame that contains a vista trip file
 
 <!-- end list -->
 
 ``` r
-# vista_persons: a data.frame that contains a vista person file 
-# vista_trips: a data.frame that contains a vista trip file
 model <- list(vista_persons = data.frame(),
               vista_trips = data.frame())
 ```
@@ -218,7 +219,7 @@ The MATSim melbourne scenario has the following unresolved issues
 
 ## Setup Java
 
-As of 2020-01-10, Java JDK 11.0.1 must be installed in order for the
+As of 2020-01-11, Java JDK 11.0.1 must be installed in order for the
 `rJava` pacakge to work. This issue has been discussed
 [here](https://github.com/rstudio/rstudio/issues/2254). This is only
 required if you would like to run the MATSim module using rJava as
@@ -255,5 +256,5 @@ It may be a good idea to run the following command in your Terminal.
 
     R CMD javareconf
 
-Then quite RStudio and launch in again to try `library(rJava)`. If the
-error still presist then Google search is your best friend\!
+Then quit RStudio and launch it again to try `library(rJava)`. If the
+error still persist then Google search is your best friend\!
