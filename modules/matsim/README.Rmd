@@ -24,6 +24,13 @@ This module provides the following functionalities:
 - `createVISTADemand.R`: assign daily activity patterns to a population and write it as a MATSim plan_v4 file.
 - `helpers.R`: reader and edit matsim's config, create a MATSim network_v2 file from shpfiles, assign random geographical locations to activities. 
 
+# Release note
+
+## Version 0.1.0
+
+- Allows basic calls to MATSim APIs from R. 
+- Adds functions for preparing MATSim inputs.
+
 # Requiements
 
 ## R packages
@@ -34,7 +41,8 @@ This module provides the following functionalities:
 ## MATSim
 
 - You will need to install Java. It is recommended to use Java 8 to run MATSim (see related issues here: https://github.com/matsim-org/matsim-code-examples/issues/176, https://github.com/matsim-org/matsim-code-examples/issues/16). 
-- The matsim module is shipped with a MATSim executable. It is required for you to extract the `matsim.zip` inside your matsim module folder file in order to use any event that requires the MATSim java executable file.
+
+- The matsim module doesn't shipped with a MATSim java executable file that is required to make this module works. The user must download MATSim from [MATSim website](https://www.matsim.org/downloads/). I recommend to use the latest stable release (version 0.10.0 as of `r Sys.Date()`) with this module. Once, you have downloaded MATSim you must extract the matsim zip file into your matsim module folder (usually under the root folder of your active R project `modules/matsim`). Then rename the extracted file as 'matsim'. Then you are good to go! :) 
 
 # Events
 
@@ -146,6 +154,8 @@ The implementation of this function is very specific to the 2009 VISTA data henc
 - shp2xml: convert a network shapfile to a MATSim compatible xml network file
 
 See the `helpers.R` script for more details.
+
+Additionally, there are some functions for binding MATSim's histogram plots into a single animated histogram by iteration number in `plots.R`
 
 # Known issues
 

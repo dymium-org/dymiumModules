@@ -1,5 +1,7 @@
 
   - [MATSim module documentation](#matsim-module-documentation)
+  - [Release note](#release-note)
+      - [Version 0.1.0](#version-0.1.0)
   - [Requiements](#requiements)
       - [R packages](#r-packages)
       - [MATSim](#matsim)
@@ -26,6 +28,13 @@ This module provides the following functionalities:
     network\_v2 file from shpfiles, assign random geographical locations
     to activities.
 
+# Release note
+
+## Version 0.1.0
+
+  - Allows basic calls to MATSim APIs from R.
+  - Adds functions for preparing MATSim inputs.
+
 # Requiements
 
 ## R packages
@@ -40,10 +49,16 @@ This module provides the following functionalities:
     run MATSim (see related issues here:
     <https://github.com/matsim-org/matsim-code-examples/issues/176>,
     <https://github.com/matsim-org/matsim-code-examples/issues/16>).
-  - The matsim module is shipped with a MATSim executable. It is
-    required for you to extract the `matsim.zip` inside your matsim
-    module folder file in order to use any event that requires the
-    MATSim java executable file.
+
+  - The matsim module doesn’t shipped with a MATSim java executable file
+    that is required to make this module works. The user must download
+    MATSim from [MATSim website](https://www.matsim.org/downloads/). I
+    recommend to use the latest stable release (version 0.10.0 as of
+    2020-01-10) with this module. Once, you have downloaded MATSim you
+    must extract the matsim zip file into your matsim module folder
+    (usually under the root folder of your active R project
+    `modules/matsim`). Then rename the extracted file as ‘matsim’. Then
+    you are good to go\! :)
 
 # Events
 
@@ -187,6 +202,9 @@ with a proper activity-based model if available.
     network file
 
 See the `helpers.R` script for more details.
+
+Additionally, there are some functions for binding MATSim’s histogram
+plots into a single animated histogram by iteration number in `plots.R`
 
 # Known issues
 
