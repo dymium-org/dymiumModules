@@ -1,0 +1,134 @@
+---
+output:
+  github_document:
+    toc: true
+    toc_depth: 2
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+knitr::opts_knit$set(root.dir = normalizePath(rprojroot::find_rstudio_root_file()))
+```
+
+# MATSim module documentation
+
+<!-- badges: start -->
+[![Lifecycle: maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
+<!-- badges: end -->
+
+This module provides the following functionalities:
+
+- `helpers.R`: reader and edit matsim's config, create a MATSim network_v2 file from shpfiles, assign random geographical locations to activities. 
+- `createVISTADemand.R`: create daily activity patterns and write to a MATSim plan_v4 file.
+- `runControl.R`: run a MATSim config file. 
+
+# Requiements
+
+- R packages: dymiumCore, modules
+- You will need to install Java. It is recommended to use Java 8 to run MATSim (see related issues here: https://github.com/matsim-org/matsim-code-examples/issues/176, https://github.com/matsim-org/matsim-code-examples/issues/16). 
+
+# Event scripts
+
+## runControl.R
+
+### Usage
+
+```{r, eval = FALSE}
+event_matsim_runcontroler <- modules::use("modules/matsim/runControler.R")
+event_matsim_runcontroler$run(object, model, target, time_steps)
+```
+
+### Parameters
+
+* object: a [World] object.
+* model: a named list that contains path to a MATSim config file.
+
+```{r eval = FALSE}
+model <- list(matsim = "path/to/config.xml")
+```
+
+* target: NULL
+* time_steps: a integer vector that contains the time steps in which this event
+should be run.
+
+
+### Description
+
+This script contains the main function which is `event_matsim_runcontroler$run(object, model, target, time_steps)`. The function calls a MATSim configuration file that contains all the settings necessary to run a MATSim scenario. By default, dymium modifies the output directory where MATSim results will be saved to `/<path-to-your-dymium-RStudio-project>/output/matsim`. This is done by creating a modified version (with a `-dymium` suffix) of the supplied config file and saved inside the same directory.
+
+To modify a MATSim config at runtime you may use the suppiled MatsimConfig class in `helpers.R`. This class allows you to modify values inside a MATSim config file using its public methods.
+
+Some MATSim settings can be modified in this script such as the path to a MATSim.jar executable file and the maximum amount of memory for MATSim to utilise. They are stored as `.matsim_setting`. To modify these options open the script and find the lines that are similar to the code in the chuck below.
+
+### Note
+
+```{r eval = FALSE}
+.matsim_setting <- 
+  list(
+    max_memory = "-Xmx8048m", # maximum amount of memory
+    path_to_matsim_jar = here::here('modules/matsim/matsim/matsim-0.11.0-SNAPSHOT.jar') # path to your MATSim.jar
+  )
+```
+
+### Example
+
+```{r eval = FALSE}
+1 + 1 
+```
+
+
+## createVISTADemand.R
+
+This event function assigns daily travel activity patterns to Dymium individuals using a statistical matching technique. It uses a travel survey in this case the 2009 VISTA household travel survey of Victoria state, Australia. It then parses the fused travel activities to an xml file that follows the format of [MATSim's population_V6](http://www.matsim.org/files/dtd/population_v6.dtd) and save it to your matsim input folder.
+
+This can be used as a template for implementing other travel surveys or can be replaced this step entirely with a proper activity-based model if available.
+
+## helpers.R
+
+See the script for available functions.
+
+# FAQs
+
+## Setup Java 
+
+As of `r Sys.Date()`, Java JDK 11.0.1 must be installed in order for the `rJava` pacakge to work. This issue has been discussed [here](https://github.com/rstudio/rstudio/issues/2254). This is only required if you would like to run the MATSim module using rJava as implemented in `.run_matsim` function inside `runControler.R`. Otherwise, you can use `.run_matsim2` which basically invoke your `matsim.jar` from the OS command, this option requires you to make sure that Java8+ is installed and is callable using the OS command. 
+
+To install the required version of Java click on this [link](https://www.oracle.com/technetwork/java/javase/downloads/java-archive-javase11-5116896.html) and download **Java SE Development Kit 11.0.1** that works on your machine.
+
+You may need to run `R CMD javareconf` on terminal to make sure R detects your new java installation. Make sure that all R sessions are close before running this command.
+
+
+## rJava failed to load! Ughhhhh!
+
+
+If you get the follow error from
+
+```r
+> library(rJava)
+# Error: package or namespace load failed for 'rJava':
+#  .onLoad failed in loadNamespace() for 'rJava', details:
+#   call: dyn.load(file, DLLpath = DLLpath, ...)
+#   error: unable to load shared object '/Users/kevin/Library/R/3.4/library/rJava/libs/rJava.so':
+#   dlopen(/Users/kevin/Library/R/3.4/library/rJava/libs/rJava.so, 6): Library not loaded: @rpath/libjvm.dylib
+#   Referenced from: /Users/kevin/Library/R/3.4/library/rJava/libs/rJava.so
+#   Reason: image not found
+```
+
+It may be a good idea to run the following command in your Terminal.
+
+```
+R CMD javareconf
+```
+
+Then quite RStudio and launch in again to try `library(rJava)`. If the error still presist then Google search is your best friend!
+
+# Known issues
+
+The MATSim melbourne scenario has the following unresolved issues
+
+- strategy setting 'SubtourModeChoice' doesn't work. If this setting is used, the error will be raised about modeParam 'pt' and 'walk' not being valid.
