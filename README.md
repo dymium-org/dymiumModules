@@ -48,3 +48,5 @@ calling`?download\_module\`.
     dynamics.
   - [matsim](https://github.com/dymium-org/dymiumModules/tree/master/modules/matsim):
     an agent-based traffic simulator.
+  - [test](https://github.com/dymium-org/dymiumModules/tree/master/modules/test):
+    a module for testing purposes.
