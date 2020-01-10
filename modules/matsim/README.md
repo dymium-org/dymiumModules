@@ -1,52 +1,59 @@
 
   - [MATSim module documentation](#matsim-module-documentation)
   - [Requiements](#requiements)
-  - [Event scripts](#event-scripts)
-      - [runControl.R](#runcontrol.r)
-      - [createVISTADemand.R](#createvistademand.r)
-      - [helpers.R](#helpers.r)
-  - [FAQs](#faqs)
+      - [R packages](#r-packages)
+      - [MATSim](#matsim)
+  - [Events](#events)
+      - [Run controler](#run-controler)
+      - [Create a MATSim plan](#create-a-matsim-plan)
+  - [Helper functions](#helper-functions)
+  - [Known issues](#known-issues)
+      - [MATSim](#matsim-1)
       - [Setup Java](#setup-java)
       - [rJava failed to load\!
         Ughhhhh\!](#rjava-failed-to-load-ughhhhh)
-  - [Known issues](#known-issues)
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 # MATSim module documentation
 
-<!-- badges: start -->
-
-[![Lifecycle:
-maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
-<!-- badges: end -->
-
 This module provides the following functionalities:
 
+  - `runControl.R`: run MATSim using a MATSim config file.
+  - `createVISTADemand.R`: assign daily activity patterns to a
+    population and write it as a MATSim plan\_v4 file.
   - `helpers.R`: reader and edit matsim’s config, create a MATSim
     network\_v2 file from shpfiles, assign random geographical locations
     to activities.
-  - `createVISTADemand.R`: create daily activity patterns and write to a
-    MATSim plan\_v4 file.
-  - `runControl.R`: run a MATSim config file.
 
 # Requiements
 
-  - R packages: dymiumCore, modules
+## R packages
+
+  - R CRAN packages: data.table, modules, StatMatch, checkmate, here,
+    rJava, xml2, sf, glue, furrr, fs
+  - R github packages: dymium-org/dymiumCore,
+
+## MATSim
+
   - You will need to install Java. It is recommended to use Java 8 to
     run MATSim (see related issues here:
     <https://github.com/matsim-org/matsim-code-examples/issues/176>,
     <https://github.com/matsim-org/matsim-code-examples/issues/16>).
+  - The matsim module is shipped with a MATSim executable. It is
+    required for you to extract the `matsim.zip` inside your matsim
+    module folder file in order to use any event that requires the
+    MATSim java executable file.
 
-# Event scripts
+# Events
 
-## runControl.R
+## Run controler
 
 ### Usage
 
 ``` r
 event_matsim_runcontroler <- modules::use("modules/matsim/runControler.R")
-event_matsim_runcontroler$run(object, model, target, time_steps)
+event_matsim_runcontroler$run(world, model = NULL, target = NULL, time_steps = NULL)
 ```
 
 ### Parameters
@@ -57,7 +64,10 @@ event_matsim_runcontroler$run(object, model, target, time_steps)
 <!-- end list -->
 
 ``` r
-model <- list(matsim = "path/to/config.xml")
+# config: path to a matsim config file
+# lastIteration: a numeric value that denotes the number of iterations for matsim to run
+model <- list(config = "path/to/config.xml",
+              lastIteration = 10)
 ```
 
   - target: NULL
@@ -87,6 +97,11 @@ in the chuck below.
 
 ### Note
 
+Some settings need to be specified such as the maxmimum memory MATSim is
+allowed to use and the path to the MATSim java executable file. These
+settings can be changed inside the event script that can be found at
+`modules/matsim/runControler.R`.
+
 ``` r
 .matsim_setting <- 
   list(
@@ -97,29 +112,91 @@ in the chuck below.
 
 ### Example
 
+The following example runs an example MATSim scenario for five
+iterations.
+
 ``` r
-1 + 1 
+event_matsim_runcontroler <-
+  modules::use(here::here('modules/matsim/runControler.R'))
+
+create_toy_world()
+
+for (i in 1:10) {
+  world$start_iter(time_step = i, unit = 'year') %>%
+    event_matsim_runcontroler$run(model = list(
+      config = here::here("modules/matsim/matsim/examples/equil/config.xml"),
+      lastIteration = 5
+    ))
+}
 ```
 
-## createVISTADemand.R
+## Create a MATSim plan
+
+### Usage
+
+``` r
+event_matsim_createVISTADemand <- modules::use('modules/matsim/createVISTADemand.R')
+event_matsim_createVISTADemand$run(world, model = NULL, target = NULL, time_steps = NULL)
+```
+
+### Parameters
+
+  - object: a World object.
+  - model: a named list.
+
+<!-- end list -->
+
+``` r
+# vista_persons: a data.frame that contains a vista person file 
+# vista_trips: a data.frame that contains a vista trip file
+model <- list(vista_persons = data.frame(),
+              vista_trips = data.frame())
+```
+
+  - target: NULL
+  - time\_steps: a integer vector that contains the time steps in which
+    this event should be run.
+
+### Description
 
 This event function assigns daily travel activity patterns to Dymium
 individuals using a statistical matching technique. It uses a travel
 survey in this case the 2009 VISTA household travel survey of Victoria
-state, Australia. It then parses the fused travel activities to an xml
-file that follows the format of [MATSim’s
+state, Australia
+([link](https://transport.vic.gov.au/about/data-and-research/vista/vista-data-and-publications)).
+It then parses the fused travel activities to an xml file that follows
+the format of [MATSim’s
 population\_V6](http://www.matsim.org/files/dtd/population_v6.dtd) and
 save it to your matsim input folder.
 
-This can be used as a template for implementing other travel surveys or
-can be replaced this step entirely with a proper activity-based model if
-available.
+### Note
 
-## helpers.R
+The implementation of this function is very specific to the 2009 VISTA
+data hence it most likely not going to work if you replace the vista
+data with other data. However, this can be used as a template for
+implementing other travel surveys or can be replaced this step entirely
+with a proper activity-based model if available.
 
-See the script for available functions.
+# Helper functions
 
-# FAQs
+  - MatsimConfig: an R6 class that can modify a MATSim config file
+  - create\_population\_v6: create a population xml file that complies
+    with MATSim’s Population V6.
+  - assign\_location: assign a random locations within a shapefile
+  - shp2xml: convert a network shapfile to a MATSim compatible xml
+    network file
+
+See the `helpers.R` script for more details.
+
+# Known issues
+
+## MATSim
+
+The MATSim melbourne scenario has the following unresolved issues
+
+  - strategy setting ‘SubtourModeChoice’ doesn’t work. If this setting
+    is used, the error will be raised about modeParam ‘pt’ and ‘walk’
+    not being valid.
 
 ## Setup Java
 
@@ -162,11 +239,3 @@ It may be a good idea to run the following command in your Terminal.
 
 Then quite RStudio and launch in again to try `library(rJava)`. If the
 error still presist then Google search is your best friend\!
-
-# Known issues
-
-The MATSim melbourne scenario has the following unresolved issues
-
-  - strategy setting ‘SubtourModeChoice’ doesn’t work. If this setting
-    is used, the error will be raised about modeParam ‘pt’ and ‘walk’
-    not being valid.
