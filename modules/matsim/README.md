@@ -188,7 +188,7 @@ save it to your matsim input folder.
 ### Note
 
 The implementation of this function is very specific to the 2009 VISTA
-data hence it most likely not going to work if you replace the vista
+data hence it’s most likely not going to work if you replace the vista
 data with other data. However, this can be used as a template for
 implementing other travel surveys or can be replaced this step entirely
 with a proper activity-based model if available.
