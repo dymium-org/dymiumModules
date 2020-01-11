@@ -19,7 +19,7 @@ request.
   - [matsim](https://github.com/dymium-org/dymiumModules/tree/master/modules/matsim):
     an agent-based traffic simulator.
   - [test](https://github.com/dymium-org/dymiumModules/tree/master/modules/test):
-    a module for internal testing of dymiumCore.
+    regression testing for dymiumCore.
 
 # Create a new module
 

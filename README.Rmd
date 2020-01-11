@@ -24,7 +24,7 @@ in this repository please send in your module as a pull request.
 
 - [demography](https://github.com/dymium-org/dymiumModules/tree/master/modules/demography): demographic processes for simulating population and household dynamics.
 - [matsim](https://github.com/dymium-org/dymiumModules/tree/master/modules/matsim): an agent-based traffic simulator.
-- [test](https://github.com/dymium-org/dymiumModules/tree/master/modules/test): a module for internal testing of dymiumCore. 
+- [test](https://github.com/dymium-org/dymiumModules/tree/master/modules/test): regression testing for dymiumCore.
 
 # Create a new module
 
