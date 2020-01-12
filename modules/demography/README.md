@@ -53,11 +53,11 @@ event_demography_age$run(world, model = NULL, target = NULL, time_steps = NULL)
 
 ### Params
 
-  - object: a \[World\] object.
-  - model: NULL, this event doesn’t require this argument.
-  - target: NULL, this event doesn’t require this argument.
-  - time\_steps: a integer vector that contains the time steps in which
-    this event should be run.
+  - **object**: a World object.
+  - **model**: NULL, this event doesn’t require this argument.
+  - **target**: NULL, this event doesn’t require this argument.
+  - **time\_steps**: a integer vector that contains the time steps in
+    which this event should be run.
 
 ### Description
 
@@ -89,21 +89,35 @@ world %>%
 
 ### Usage
 
+``` r
+event_demography_birth <- modules::use("modules/demography/birth.R")
+event_demography_birth$run(world, model = NULL, target = NULL, time_steps = NULL)
+```
+
 ### Params
 
-  - object: a \[World\] object.
-  - model: a named list that contains path to a MATSim config file.
+  - **object**: a \[World\] object.
+  - **model**: a named list that contains path to a MATSim config file.
+      - **fertility**: a binary model to determine weather the female in
+        question is to give birth or not.
+      - **birth\_multiplicity**: chance of giving birth to more than one
+        baby. Note that, the current code is only allow for twins but
+        you may modify this to accommodate cases of triplets and more.
+      - **birth\_sex\_ratio**: the chance of giving birth to a female
+        baby vs a male baby.
 
 <!-- end list -->
 
 ``` r
-# config: path to a matsim config file
-# lastIteration: a numeric value that denotes the number of iterations for matsim to run
-model <- list(config = "path/to/config.xml",
-              lastIteration = 10)
+model <- list(fertility = list(yes = 0.05, no = 0.95),
+              birth_multiplicity = list("single" = 0.97, "twins" = 0.03),
+              birth_sex_ratio = list(male = 0.51, female = 0.49))
 ```
 
-  - target: NULL
+  - target: default as `NULL` or it can be a named list which determines
+    the number of individual agents to under go the fertility event. For
+    example, if a list `list(yes = 100)` it will garantee that there are
+    100 individual agents that will give birth.
   - time\_steps: a integer vector that contains the time steps in which
     this event should be run.
 
@@ -113,7 +127,9 @@ model <- list(config = "path/to/config.xml",
 
 ### Example
 
-For female individual agents.
+``` r
+NULL
+```
 
 ## Death
 
@@ -121,27 +137,39 @@ For female individual agents.
 
 ### Params
 
-  - object: a \[World\] object.
-  - model: a named list that contains path to a MATSim config file.
+  - **world**: a World object.
+  - **model**: a named list.
+      - **death**: a binary model.
 
 <!-- end list -->
 
 ``` r
-# config: path to a matsim config file
-# lastIteration: a numeric value that denotes the number of iterations for matsim to run
-model <- list(config = "path/to/config.xml",
-              lastIteration = 10)
+model <- list(death = list(yes = 0.03, no = 0.97))
 ```
 
-  - target: NULL
-  - time\_steps: a integer vector that contains the time steps in which
-    this event should be run.
+  - **target**: default as `NULL` or a named list.
+  - **time\_steps**: a integer vector that contains the time steps in
+    which this event should be run.
 
 ### Description
 
+Simulate deaths of individual agents. It removes the dying individual
+agents from the individual database and also updates attributes (such as
+marital status, household size) of any agents that are related to the
+dying agents.
+
 ### Note
 
+The marital status of those individual agents whom their partner has
+died will be labelled as “widowed”. To retrive the data of all agents
+that have been removed you through the death event use the
+`get_removed_data()` method.
+
 ### Example
+
+``` r
+NULL
+```
 
 ## Marriage
 
@@ -149,38 +177,95 @@ model <- list(config = "path/to/config.xml",
 
 ### Params
 
-  - object: a \[World\] object.
-  - model: a named list that contains path to a MATSim config file.
+  - **object**: a \[World\] object.
+  - **model**: a named list.
+      - **marriage\_cohab\_male**: a binary model that determines
+        whether a cohabitating couple will get married. This is based on
+        attributes of the male partner.
+      - **marriage\_no\_cohab\_male**: a binary model that determines
+        the chance for eligible males to enter the marital market.
+      - **marriage\_no\_cohab\_female**: a binary model that determines
+        the chance for eligible females to enter the marital market.
+      - **husbandAgeRuleToCreateNewHousehold**: a binary model that
+        determines the chance of the couple to form a new household or
+        merge their households.
 
 <!-- end list -->
 
 ``` r
-# config: path to a matsim config file
-# lastIteration: a numeric value that denotes the number of iterations for matsim to run
-model <- list(config = "path/to/config.xml",
-              lastIteration = 10)
+model <- list(
+  marriage_cohab_male = list(yes = 0.1, no = 0.9),
+  marriage_no_cohab_male = list(yes = 0.1, no = 0.9),
+  marriage_no_cohab_female = list(yes = 0.1, no = 0.9),
+  husbandAgeRuleToCreateNewHousehold = list(age = 30)
+)
 ```
 
-  - target: NULL
-  - time\_steps: a integer vector that contains the time steps in which
-    this event should be run.
+  - **target**: a named list
+
+<!-- end list -->
+
+``` r
+target <- list(
+  yes = 100
+)
+```
+
+  - **time\_steps**: a integer vector that contains the time steps in
+    which this event should be run.
 
 ### Description
 
+This event forms a marriage relationship between a cohabiting couple and
+two individuals that are not in a relationship. After the marriage is
+formed, the newly wedded couple then decide whether to form a new
+household or to merge their households into one. When forming a new
+household, regardless of their household formation decision, any related
+individuals (i.e. dependent children) to both individuals will also
+follow to the new household.
+
 ### Note
+
+As you can see there are four models that shall be supplied to determine
+the likelihood in each stage of the marriage event. The first stage is
+to marry cohabiting couples based on the likelihood produces by the
+`marriage_cohab_male` model. The second stage is to marry eligible,
+single individual agents. The probabilities for the individual agents to
+enter the marital market come from the Monte Carlo simulation result
+performed using the `marriage_no_cohab_male` and
+`marriage_no_cohab_female` models on the individual agents’ attributes.
+Then all participating individual agents are paired based on a given
+rule. The rule can be as simple as all agents prefer to match with an
+agent that has the minimum age difference to theirs. See
+`StochasticMarriageMarket` and `OptimalMarriageMarket` for the matching
+strategies available in `modules/demography/marriage.R`. Note that, if
+there are more agents of one gender than other in the marital market
+then the number of maximum matches will be equal to the number of
+individual agents with the lesser number. Those who are not matched will
+remain single after the event has ended. The current implementation
+doesn’t include marriages between same-sex couples. After the matching
+step, all newly formed couples will decide whether they will form a new
+household (both agents leave their current households) or for the wife
+and her related individuals to join her husband’s household. The current
+implementation applies a very simple rule which is likely to be wrong
+and should be replaced if there is a better assumption or model. The
+current rule is that for all newly wedded couples if their male partner
+aged more than the number given in `husbandAgeRuleToCreateNewHousehold`
+they will create a new household.
+
+TLDR;
+
+  - Simulate marriages for comhabiting couples and single individuals.
+  - Aged 16 and above to be able to marry.
+  - Doesn’t consider marriages between same-sex couples.
+  - The matching strategy for pairing individuals can be configured,
+    either optimal or stochastic.
 
 ### Example
 
-Marriages can be divided into two types: marriage with priorly cohabited
-and marriage without cohabitation. The first type only applies to
-cohabiting couples who want to get married. The second type of marriage
-can occur to any non-cohabiting individuals.
-
-### Required Models
-
-  - marriage\_cohab\_male: a binary choice model
-  - marriage\_no\_cohab\_male: a binary choice model
-  - marriage\_no\_cohab\_female: a binary choice model
+``` r
+NULL
+```
 
 ## Separation
 
@@ -188,8 +273,8 @@ can occur to any non-cohabiting individuals.
 
 ### Params
 
-  - object: a \[World\] object.
-  - model: a named list that contains path to a MATSim config file.
+  - **object**: a World object.
+  - **model**: a named list that contains path to a MATSim config file.
 
 <!-- end list -->
 
@@ -200,7 +285,7 @@ model <- list(config = "path/to/config.xml",
               lastIteration = 10)
 ```
 
-  - target: NULL
+  - **target**: NULL
   - time\_steps: a integer vector that contains the time steps in which
     this event should be run.
 
@@ -220,8 +305,8 @@ to separate.
 
 ### Params
 
-  - object: a \[World\] object.
-  - model: a named list that contains path to a MATSim config file.
+  - **object**: a World object.
+  - **model**: a named list that contains path to a MATSim config file.
 
 <!-- end list -->
 
@@ -232,9 +317,9 @@ model <- list(config = "path/to/config.xml",
               lastIteration = 10)
 ```
 
-  - target: NULL
-  - time\_steps: a integer vector that contains the time steps in which
-    this event should be run.
+  - **target**: NULL
+  - **time\_steps**: a integer vector that contains the time steps in
+    which this event should be run.
 
 ### Description
 

@@ -5,9 +5,28 @@ library(dymiumCore)
 # set logger's threshold to 'warn' to mute info level loggings
 dymiumCore:::lg$set_threshold(level = 'warn')
 event_demography_death <- modules::use(here::here('modules/demography/death.R'))
+helpers <- modules::use(here::here("modules/demography/helpers.R"))
 
 # write your on tests using testthat::test_that(...)
 test_that('event works', {
   # for example
-  expect_true(1 == 1)
+  dymiumCore::create_toy_world(small = TRUE, with_model = T)
+  
+  n_individuals_before <- 
+    world$AgentContainer$pop$ind$get_data() %>%
+    nrow()
+  
+  # run the event for 10 iterations
+  years <- 1:10
+  for (year in years) {
+    world$start_iter(year, "year") %>% 
+      event_demography_death$run(object = .)   
+  }
+  
+  n_individuals_after <- 
+    world$AgentContainer$pop$ind$get_data() %>%
+    nrow()
+  
+  expect_true(n_individuals_after < n_individuals_before)
+  
 })
