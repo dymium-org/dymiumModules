@@ -107,7 +107,11 @@ should be run.
 
 ### Description
 
+The birth event adds newborns to the population by simulating the chance for fertile individual agents to give birth.
+
 ### Note
+
+Newborns inherit some attributes from their mothers such as household id and dwelling id. Their mother id and father id fields will be set at the time of their birth and a new unique id will be assigned to them.
 
 ### Example
 
@@ -227,11 +231,17 @@ should be run.
 
 ### Description
 
+Separation is the stage before a couple is officially divorced. In the Australian context, all married couples that would like to get divorced must register their separtion one year prior to becoming legally divorced. Hence, this event simulates that process. 
+
 ### Note
+
+Separation is the first step before couples can be officially divorced. This module assume that no couples will recoupled once they have decided to separate. 
 
 ### Example
 
-Separation is the first step before couples can be officially divorced. This module assume that no couples will recoupled once they have decided to separate. 
+```{r}
+NULL
+```
 
 ## Divorce
 
@@ -256,11 +266,16 @@ should be run.
 
 ### Description
 
+When divorce is triggered for a separted individual, his/her ex-partner will also under go divorce **if** the marital status of his/her ex-partner is still 'separated'.  
+
 ### Note
 
 ### Example
 
-When divorce is triggered for a separted individual, his/her ex-partner will also under go divorce **if** the marital status of his/her ex-partner is still 'separated'.  
+```{r}
+NULL
+```
+
 
 ## Cohabitation
 
@@ -320,25 +335,40 @@ should be run.
 
 ### Params
 
-* object: a [World] object.
-* model: a named list that contains path to a MATSim config file.
+* __object__: a [World] object.
+* __model__: a named list that contains path to a MATSim config file.
+  * __leavehome_male__: a binary decision for male individuals whether to leave home or not.
+  * __leavehome_female__: a binary decision for female individuals whether to leave home or not.
+  * __leavehome_hhtype__: a binary choice whether to join a group household or to form a single household.
+  * __leavehome_hf_random_join__: a discrete distribution of the household size. For example, if this is `list(1 = 0.5, 2 = 0.3, 3 = 0.1, 4 = 0.1)` there is a 50% chance that an individual leaving their parental home will find a single household to join and a 30% chance to join a two-person household and so on.
 
 ```{r eval = FALSE}
 # config: path to a matsim config file
 # lastIteration: a numeric value that denotes the number of iterations for matsim to run
-model <- list(config = "path/to/config.xml",
-              lastIteration = 10)
+model <- list(leavehome_male = list(yes = 0.3, no = 0.7),
+              leavehome_female = list(yes = 0.2, no = 0.8),
+              leavehome_hhtype = list(lone = 0.2, group = 0.8),
+              leavehome_hf_random_join = list(1 = 0.5, 2 = 0.3, 3 = 0.1, 4 = 0.1))
 ```
 
-* target: NULL
-* time_steps: a integer vector that contains the time steps in which this event
+* __target__: a named list or NULL.
+* __time_steps__: a integer vector that contains the time steps in which this event
 should be run.
 
 ### Description
 
+This simulates the chance that young adults will leave home.
+
 ### Note
 
+This does not include the proportion of people whom will leave home to get married or to live with their partner as it has been accounted for in the marriage event and the cohabitation event.
+
 ### Example
+
+```{r}
+NULL
+```
+
 
 ## Migration
 
