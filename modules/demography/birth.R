@@ -64,7 +64,7 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   )
 
   twins_birth_giver_ids <-
-    TransTwinBirth$get_decision_maker_ids("2")
+    TransTwinBirth$get_decision_maker_ids("twins")
 
   # the length of this vector is equal to the total number of births which is
   # represented by their mothers' id. For example, if individual with id = 1 is
