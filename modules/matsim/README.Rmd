@@ -26,6 +26,10 @@ This module provides the following functionalities:
 
 # Release note
 
+## Version 0.1.1
+
+- add `use_rJava` argument to `runControler` this allows the event to be configured how it should run MATSim's controler.
+
 ## Version 0.1.0
 
 - Allows basic calls to MATSim APIs from R. 
@@ -70,6 +74,7 @@ model <- list(config = "path/to/config.xml",
 * __target__: NULL
 * __time_steps__: a integer vector that contains the time steps in which this event
 should be run.
+* __use_rJava__: a logical value default as `TRUE`, this determine the method that the function uses to run MATSim. By default, the function will attempt to use rJava to start MATSim's controler. If FALSE, then it will call MATSim using a commandline command. Note that, calling MATSim from the commandline only possible on a UNIX machine if you are running this through a Windows machine then you must use rJava to call MATSim. A error will be raised if this is set to FALSE on a Windows machine.
 
 
 ### Description
@@ -160,23 +165,25 @@ Additionally, there are some functions for binding MATSim's histogram plots into
 # Known issues
 
 ## MATSim
+
 The MATSim melbourne scenario has the following unresolved issues
 
 - strategy setting 'SubtourModeChoice' doesn't work. If this setting is used, the error will be raised about modeParam 'pt' and 'walk' not being valid.
 
+MATSim works best with Java 8. If you are running newer versions of Java there is a high chance that some dependencies might be missing one of which is the JAXB libraries as discussed [here](https://github.com/matsim-org/matsim-code-examples/issues/176).
+
+
 ## Setup Java 
 
-As of `r Sys.Date()`, Java JDK 11.0.1 must be installed in order for the `rJava` pacakge to work. This issue has been discussed [here](https://github.com/rstudio/rstudio/issues/2254). This is only required if you would like to run the MATSim module using rJava as implemented in `.run_matsim` function inside `runControler.R`. Otherwise, you can use `.run_matsim2` which basically invoke your `matsim.jar` from the OS command, this option requires you to make sure that Java8+ is installed and is callable using the OS command. 
+As of `r Sys.Date()`, Java JDK 11.0.1 must be installed in order for the `rJava` pacakge to work. This issue has been discussed [here](https://github.com/rstudio/rstudio/issues/2254) and [here](https://github.com/s-u/rJava/issues/151). This is only required if you would like to run the MATSim module using rJava as implemented in `.run_matsim_rjava` function inside `runControler.R`. Otherwise, you can use `.run_matsim_system()` which basically invoke your `matsim.jar` from the OS command, this option requires you to make sure that Java8+ is installed and is callable using the OS command. 
 
 To install the required version of Java click on this [link](https://www.oracle.com/technetwork/java/javase/downloads/java-archive-javase11-5116896.html) and download **Java SE Development Kit 11.0.1** that works on your machine.
 
-You may need to run `R CMD javareconf` on terminal to make sure R detects your new java installation. Make sure that all R sessions are close before running this command.
-
+You will need to run `R CMD javareconf` on terminal to make sure R detects your new java installation. Make sure that all R sessions are close before running this command.
 
 ## rJava failed to load! Ughhhhh!
 
-
-If you get the follow error from
+If you get the following error..
 
 ```r
 > library(rJava)

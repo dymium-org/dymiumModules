@@ -14,8 +14,14 @@ test_that('event works', {
 
   for (i in 1:10) {
     world$start_iter(time_step = i, unit = 'year') %>%
-      event_matsim_runcontroler$run(model = list(config = here::here("modules/matsim/matsim/examples/equil/config.xml"),
-                                                 lastIteration = 5))
+      event_matsim_runcontroler$run(
+        world = .,
+        model = list(
+          config = here::here("modules/matsim/matsim/examples/equil/config.xml"),
+          lastIteration = 5
+        ),
+        use_rJava = TRUE
+      )
   }
   
 })

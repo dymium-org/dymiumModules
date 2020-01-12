@@ -20,10 +20,18 @@
 # comfortable with how the 'lgr' and 'modules' packages work you may modify
 # the codes below.
 modules::import('lgr')
+modules::import("crayon", "magenta")
 modules::export('lg')
 lg <- lgr::get_logger_glue(name = 'matsim')
 lg$set_appenders(list(cons = lgr::AppenderConsole$new()))
-lg$appenders$cons$set_layout(lgr::LayoutGlue$new(fmt = '[{format(timestamp, \'%H:%M:%S\')}] \\
-                                                        {pad_right(colorize_levels(toupper(level_name)), 5)}\\
-                                                        {crayon::magenta(.logger$name)} {caller}: {msg}'))
+lg$appenders$cons$set_layout(
+  lgr::LayoutGlue$new(
+    fmt = '[{format(timestamp, \'%H:%M:%S\')}] \\
+           {pad_right(colorize_levels(toupper(level_name)), 5)}\\
+           {crayon::magenta(.logger$name)} {caller}: {msg}'
+  )
+)
+logfile <- file.path(dymiumCore::active_scenario()$scenario_dir, "log")
+fs::file_create(logfile)
+lg$add_appender(lgr::AppenderFile$new(logfile, layout = lgr::LayoutJson$new()))
 lg$set_propagate(FALSE)

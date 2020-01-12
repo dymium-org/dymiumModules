@@ -1,6 +1,7 @@
 
   - [MATSim module documentation](#matsim-module-documentation)
   - [Release note](#release-note)
+      - [Version 0.1.1](#version-0.1.1)
       - [Version 0.1.0](#version-0.1.0)
   - [Requiements](#requiements)
       - [R packages](#r-packages)
@@ -30,6 +31,11 @@ This module provides the following functionalities:
 
 # Release note
 
+## Version 0.1.1
+
+  - add `use_rJava` argument to `runControler` this allows the event to
+    be configured how it should run MATSim’s controler.
+
 ## Version 0.1.0
 
   - Allows basic calls to MATSim APIs from R.
@@ -54,7 +60,7 @@ This module provides the following functionalities:
     that is required to make this module works. The user must download
     MATSim from [MATSim website](https://www.matsim.org/downloads/). I
     recommend to use the latest stable release (version 0.10.0 as of
-    2020-01-11) with this module. Once, you have downloaded MATSim you
+    2020-01-12) with this module. Once, you have downloaded MATSim you
     must extract the matsim zip file into your matsim module folder
     (usually under the root folder of your active R project
     `modules/matsim`). Then rename the extracted file as ‘matsim’. Then
@@ -89,6 +95,14 @@ model <- list(config = "path/to/config.xml",
   - **target**: NULL
   - **time\_steps**: a integer vector that contains the time steps in
     which this event should be run.
+  - **use\_rJava**: a logical value default as `TRUE`, this determine
+    the method that the function uses to run MATSim. By default, the
+    function will attempt to use rJava to start MATSim’s controler. If
+    FALSE, then it will call MATSim using a commandline command. Note
+    that, calling MATSim from the commandline only possible on a UNIX
+    machine if you are running this through a Windows machine then you
+    must use rJava to call MATSim. A error will be raised if this is set
+    to FALSE on a Windows machine.
 
 ### Description
 
@@ -217,29 +231,35 @@ The MATSim melbourne scenario has the following unresolved issues
     is used, the error will be raised about modeParam ‘pt’ and ‘walk’
     not being valid.
 
+MATSim works best with Java 8. If you are running newer versions of Java
+there is a high chance that some dependencies might be missing one of
+which is the JAXB libraries as discussed
+[here](https://github.com/matsim-org/matsim-code-examples/issues/176).
+
 ## Setup Java
 
-As of 2020-01-11, Java JDK 11.0.1 must be installed in order for the
+As of 2020-01-12, Java JDK 11.0.1 must be installed in order for the
 `rJava` pacakge to work. This issue has been discussed
-[here](https://github.com/rstudio/rstudio/issues/2254). This is only
-required if you would like to run the MATSim module using rJava as
-implemented in `.run_matsim` function inside `runControler.R`.
-Otherwise, you can use `.run_matsim2` which basically invoke your
-`matsim.jar` from the OS command, this option requires you to make sure
-that Java8+ is installed and is callable using the OS command.
+[here](https://github.com/rstudio/rstudio/issues/2254) and
+[here](https://github.com/s-u/rJava/issues/151). This is only required
+if you would like to run the MATSim module using rJava as implemented in
+`.run_matsim_rjava` function inside `runControler.R`. Otherwise, you can
+use `.run_matsim_system()` which basically invoke your `matsim.jar` from
+the OS command, this option requires you to make sure that Java8+ is
+installed and is callable using the OS command.
 
 To install the required version of Java click on this
 [link](https://www.oracle.com/technetwork/java/javase/downloads/java-archive-javase11-5116896.html)
 and download **Java SE Development Kit 11.0.1** that works on your
 machine.
 
-You may need to run `R CMD javareconf` on terminal to make sure R
+You will need to run `R CMD javareconf` on terminal to make sure R
 detects your new java installation. Make sure that all R sessions are
 close before running this command.
 
 ## rJava failed to load\! Ughhhhh\!
 
-If you get the follow error from
+If you get the following error..
 
 ``` r
 > library(rJava)
