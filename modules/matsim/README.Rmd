@@ -74,7 +74,7 @@ model <- list(config = "path/to/config.xml",
 * __target__: NULL
 * __time_steps__: a integer vector that contains the time steps in which this event
 should be run.
-* __use_rJava__: a logical value default as `TRUE`, this determine the method that the function uses to run MATSim. By default, the function will attempt to use rJava to start MATSim's controler. If FALSE, then it will call MATSim using a commandline command. Note that, calling MATSim from the commandline only possible on a UNIX machine if you are running this through a Windows machine then you must use rJava to call MATSim. A error will be raised if this is set to FALSE on a Windows machine.
+* __use_rJava__: a logical value default as `TRUE`, this determine the method that the function uses to run MATSim. By default, the function will attempt to use rJava to start MATSim's controler. If FALSE, then it will call MATSim using a commandline command. Note that, calling MATSim from the commandline only possible on a UNIX machine if you are running this through a Windows machine then you must use rJava to call MATSim. An error will be raised if this is set to FALSE on a Windows machine.
 
 
 ### Description

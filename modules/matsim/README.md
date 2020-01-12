@@ -101,8 +101,8 @@ model <- list(config = "path/to/config.xml",
     FALSE, then it will call MATSim using a commandline command. Note
     that, calling MATSim from the commandline only possible on a UNIX
     machine if you are running this through a Windows machine then you
-    must use rJava to call MATSim. A error will be raised if this is set
-    to FALSE on a Windows machine.
+    must use rJava to call MATSim. An error will be raised if this is
+    set to FALSE on a Windows machine.
 
 ### Description
 
