@@ -59,7 +59,7 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   # create travel demand ----------------------------------------------------
   
   # fuse activity pattern to Individual agents.
-  create_matsim_plan(trips = fuse_vista(Ind, world$Models),
+  create_matsim_plan(trips = fuse_vista(Ind, world$models),
                      outdir = file.path(active_scenario()$scenario_dir, "inputs/matsim"))
   
   # return the first argument (`world`) to make event functions pipe-able.
