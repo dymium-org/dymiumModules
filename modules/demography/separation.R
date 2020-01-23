@@ -9,7 +9,7 @@ modules::expose(here::here('modules/demography/transitions.R'))
 constants <- modules::use(here::here('modules/demography/constants.R'))
 helpers <- modules::use(here::here('modules/demography/helpers.R'))
 
-modules::export('^^run|^util|^test') # default exported functions
+modules::export('^run$|^REQUIRED_MODELS$') # default exported functions
 
 REQUIRED_MODELS <- c("separate_male", 
                      "separate_child_custody", 

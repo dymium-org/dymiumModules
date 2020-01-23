@@ -25,9 +25,12 @@ Note that, there are hard-coded rules that can be modified, such as the age rang
 
 # Release note
 
-## Version 0.1.0
+### version 0.1.1
+- Updated outdated event `modules` options. Event scipts should only export `run` and `REQUIRED_MODELS`.
 
-First release!
+### version 0.1.0
+- First release!
+
 
 # Requirements
 

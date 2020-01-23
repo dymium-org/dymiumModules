@@ -9,7 +9,7 @@ modules::expose(here::here('modules/demography/logger.R')) # import lgr's logger
 constants <- modules::use(here::here('modules/demography/constants.R'))
 helpers <- modules::use(here::here('modules/demography/helpers.R'))
 
-modules::export('^^run|^util|^test') # default exported functions
+modules::export('^run$|^REQUIRED_MODELS$') # default exported functions
 
 REQUIRED_MODELS <- c("divorce_male", "divorce_female")
 
