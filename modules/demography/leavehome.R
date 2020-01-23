@@ -10,7 +10,7 @@ modules::expose(here::here('modules/demography/transitions.R'))
 constants <- modules::use(here::here('modules/demography/constants.R'))
 helpers <- modules::use(here::here('modules/demography/helpers.R'))
 
-modules::export('^^run|^util|^test') # default exported functions
+modules::export('^run$|^REQUIRED_MODELS$') # default exported functions
 
 REQUIRED_MODELS <- c("leavehome_male", "leavehome_female", "leavehome_hhtype", "leavehome_hf_random_join")
 
@@ -51,7 +51,7 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   }
 
   leaverIds_ <-
-    .util_find_leavers(
+    find_leavers(
       Pop = Pop,
       maleLeaveHomeDecisionModel = model$leavehome_male,
       femaleLeaveHomeDecisionModel = model$leavehome_female,
@@ -59,8 +59,8 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
     )
 
   totalLeavers <- length(leaverIds_)
-  Pop$keep_log(
-    var = "occ:individuals_left_parental_homes",
+  Pop$log(
+    desc = "cnt:left_home",
     value = totalLeavers
   )
 
@@ -69,8 +69,8 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
 
   if (totalLeavers > 0) {
 
-    Pop$keep_log(
-      var = "id:individuals_left_parental_homes",
+    Pop$log(
+      desc = "id:demography-left_home",
       value = list(leaverIds_)
     )
 
@@ -81,13 +81,13 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
     )
 
     hhTypeDecision_dt <-
-      .util_choose_hhtype_to_join(
+      choose_hhtype_to_join(
         Pop = Pop,
         hhTypeDecisionModel = model$leavehome_hhtype,
         leaverIds_ = leaverIds_
       )
 
-    .util_moveOut(
+    move_out(
       Pop = Pop,
       model = model$leavehome_hf_random_join,
       hhTypeDecision_dt = hhTypeDecision_dt
@@ -100,7 +100,7 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
 }
 
 # private utility functions (.util_*) -------------------------------------
-.util_find_leavers = function(Pop, maleLeaveHomeDecisionModel, femaleLeaveHomeDecisionModel, leaveHomeTarget) {
+find_leavers = function(Pop, maleLeaveHomeDecisionModel, femaleLeaveHomeDecisionModel, leaveHomeTarget) {
 
   Ind <- assign_reference(Pop, Individual)
 
@@ -113,18 +113,18 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   potential_male_leaver_ids <- potential_leavers_dt[sex == constants$IND$SEX$MALE, pid]
   potential_female_leaver_ids <- potential_leavers_dt[sex == constants$IND$SEX$FEMALE, pid]
 
-  Pop$keep_log(
-    var = "avl:individuals_male_left_parental_homes",
+  Pop$log(
+    desc = "avl:individuals_male_left_parental_homes",
     value = length(potential_male_leaver_ids)
   )
 
-  Pop$keep_log(
-    var = "avl:individuals_female_left_parental_homes",
+  Pop$log(
+    desc = "avl:individuals_female_left_parental_homes",
     value = length(potential_female_leaver_ids)
   )
 
-  Pop$keep_log(
-    var = "avl:individuals_left_parental_homes",
+  Pop$log(
+    desc = "avl:demography-left_home",
     value = potential_leavers_dt[, .N]
   )
 
@@ -155,20 +155,20 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   female_leavers_ids <-
     TransLeavehomeFemales$get_decision_maker_ids('yes')
 
-  Pop$keep_log(
-    var = "occ:individuals_male_left_parental_homes",
+  Pop$log(
+    desc = "cnt:individuals_male_left_parental_homes",
     value = length(male_leavers_ids)
   )
 
-  Pop$keep_log(
-    var = "occ:individuals_female_left_parental_homes",
+  Pop$log(
+    desc = "cnt:individuals_female_left_parental_homes",
     value = length(female_leavers_ids)
   )
 
   return(c(male_leavers_ids, female_leavers_ids))
 }
 
-.util_choose_hhtype_to_join = function(Pop, hhTypeDecisionModel, leaverIds_) {
+choose_hhtype_to_join = function(Pop, hhTypeDecisionModel, leaverIds_) {
   IndObj <- assign_reference(Pop, Individual)
   TransGroupHousehold <- TransitionGroupHousehold$new(x = IndObj,
                                                       model = hhTypeDecisionModel,
@@ -179,7 +179,7 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   invisible(hhTypeDecision_dt)
 }
 
-.util_joinNewLoneHh = function(Pop, self_ids) {
+join_new_lone_hh = function(Pop, self_ids) {
   if (length(self_ids) != 0) {
     loneMovers_dt <- data.table(ind_id = self_ids, hh_id = NA_integer_)
     household_formation(Pop = Pop,
@@ -192,7 +192,7 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   invisible()
 }
 
-.util_joinExistingHh = function(Pop, model, self_ids) {
+join_existing_hh = function(Pop, model, self_ids) {
   if (length(self_ids) != 0) {
     groupMovers_dt <- data.table(ind_id = self_ids, hh_id = NA_integer_)
     household_formation(Pop, model, mapping = groupMovers_dt, type = "randomjoin")
@@ -203,18 +203,18 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   invisible()
 }
 
-.util_joinHh = function(Pop, model, hhTypeDecision_dt) {
-  .util_joinNewLoneHh(Pop = Pop,
+join_hh = function(Pop, model, hhTypeDecision_dt) {
+  join_new_lone_hh(Pop = Pop,
                       self_ids = hhTypeDecision_dt[response == "lone", leaverId])
-  .util_joinExistingHh(Pop = Pop,
+  join_existing_hh(Pop = Pop,
                        model = model,
                        self_ids = hhTypeDecision_dt[response == "group", leaverId])
   invisible()
 }
 
-.util_moveOut = function(Pop, model, hhTypeDecision_dt) {
+move_out = function(Pop, model, hhTypeDecision_dt) {
   Pop$leave_household(ind_ids = hhTypeDecision_dt[, leaverId])
-  .util_joinHh(Pop = Pop,
+  join_hh(Pop = Pop,
                model = model,
                hhTypeDecision_dt = hhTypeDecision_dt)
   invisible()

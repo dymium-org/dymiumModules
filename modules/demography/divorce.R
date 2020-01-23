@@ -60,16 +60,16 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
 
   # TODO: find the former partner and set to divorce
 
-  Pop$keep_log(
-    var = "occ:divorces",
+  Pop$log(
+    desc = "cnt:divorces",
     value = length(divorcer_ids)
   )
-  Pop$keep_log(
-    var = "avl:divorces",
+  Pop$log(
+    desc = "avl:divorces",
     value = TransDivorceMale$get_nrow_result() + TransDivorceFemale$get_nrow_result()
   )
-  Pop$keep_log(
-    var = "id:individuals_divorced",
+  Pop$log(
+    desc = "id:individuals_divorced",
     value = list(divorcer_ids)
   )
 

@@ -9,7 +9,7 @@ modules::expose(here::here('modules/demography/logger.R')) # import lgr's logger
 constants <- modules::use(here::here('modules/demography/constants.R'))
 helpers <- modules::use(here::here('modules/demography/helpers.R'))
 
-modules::export('^^run|^util|^test') # default exported functions
+modules::export('^run$|^REQUIRED_MODELS$') # default exported functions
 
 REQUIRED_MODELS <- c("fertility", "birth_multiplicity", "birth_sex_ratio")
 
@@ -37,21 +37,14 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   Ind <- assign_reference(world, Individual)
 
   # check model
-  if (is.null(model)) {
-    model <- dm_get_model(world, REQUIRED_MODELS)
-  } else {
-    checkmate::assert_names(names(model), type = "unique", identical.to = REQUIRED_MODELS)
-  }
+  model <- pick_models(model, world, REQUIRED_MODELS)
 
   # create a transition
   TransBirth <- TransitionBirth$new(
     x = Ind,
     model = model$fertility,
-    target = target$giveBirth
+    target = target$fertility
   )
-
-  all_birth_giver_ids <-
-    Ind$get_data(ids = TransBirth$get_result()[['id']])
 
   single_birth_giver_ids <-
     TransBirth$get_decision_maker_ids("yes")
@@ -72,17 +65,15 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   all_birth_giver_ids <-
     c(single_birth_giver_ids, twins_birth_giver_ids)
 
-  Pop$keep_log(var = "count:births", value = length(all_birth_giver_ids))
-  Pop$keep_log(var = "id:birth_givers", value = list(unique(all_birth_giver_ids)))
-  Pop$keep_log(var = "occ:gave_birth", value = length(single_birth_giver_ids))
-  Pop$keep_log(var = "avl:gave_birth", value = TransBirth$get_nrow_result())
+  Pop$log(desc = "cnt:births", value = length(all_birth_giver_ids))
+  Pop$log(desc = "cnt:gave_birth", value = length(single_birth_giver_ids))
+  Pop$log(desc = "avl:gave_birth", value = TransBirth$get_nrow_result())
 
   lg$info("There are {length(all_birth_giver_ids)} births from {uniqueN(all_birth_giver_ids)} birth givers.")
 
   if (length(all_birth_giver_ids) > 0) {
-
     # create newborns
-    .util_create_newborns(
+    create_newborns(
       Pop = Pop,
       ids = all_birth_giver_ids,
       sex_ratios = model$birth_sex_ratio
@@ -96,7 +87,7 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
 }
 
 # private utility functions (.util_*) -------------------------------------
-.util_create_newborns = function(Pop, ids, sex_ratios) {
+create_newborns = function(Pop, ids, sex_ratios) {
 
   Ind <- assign_reference(Pop, Individual)
 
@@ -157,7 +148,18 @@ TransitionBirth <- R6Class(
   public = list(
     filter = function(.data) {
       .data %>%
-        helpers$FilterAgent$Ind$can_give_birth()
+        helpers$FilterAgent$Ind$can_give_birth(.)# %>%
+        # helpers$FilterAgent$Ind$is_in_relationship(.)
+    },
+    mutate = function(.data) {
+      Ind <- private$.AgtObj
+      .data %>%
+        helpers$DeriveVar$IND$has_resident_children(x = ., Ind) %>%
+        helpers$DeriveVar$IND$n_resident_children(x = ., Ind) %>%
+        helpers$DeriveVar$IND$age_youngest_resident_child(x = ., Ind) %>%
+        helpers$DeriveVar$IND$age5(x = ., Ind) %>%
+        helpers$DeriveVar$IND$n_children(x = ., Ind) %>%
+        helpers$DeriveVar$IND$mrs(x = ., Ind)
     }
   )
 )
@@ -165,7 +167,3 @@ TransitionBirth <- R6Class(
 TransitionTwinsBirth <- R6Class(classname = "TransitionTwinsBirth",
                                 inherit = TransitionClassification,
                                 public = list())
-
-# exported utility functions (util_*) -------------------------------------
-util_function <- function(x) {}
-

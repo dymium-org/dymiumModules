@@ -2,7 +2,8 @@
 modules::import("dymiumCore")
 modules::import("data.table")
 modules::import("checkmate")
-modules::expose("modules/demography/constants.R")
+modules::import("here")
+modules::expose(here::here("modules/demography/constants.R"))
 # derive agent characteristics ---------------------------------------------
 # these functions should accept data as argument and add the extra column that it
 # meant to create to the original data then return that. This means we can use them in pipe.
@@ -16,13 +17,24 @@ DeriveVar <- list(
       pid_col <- Ind$get_id_col()
       stopifnot(pid_col %in% names(x))
 
-      .marital_status <- Ind$get_attr("age", ids = x[[pid_col]])
+      .marital_status <- Ind$get_attr("marital_status", ids = x[[pid_col]])
       .partner_id <- Ind$get_attr("partner_id", ids = x[[pid_col]])
-
       x[, mrcurr := ifelse(!is.na(.partner_id) &
                              .marital_status != IND$MARITAL_STATUS$MARRIED,
                            yes = IND$MARITAL_STATUS$DE_FACTO,
                            no = marital_status)]
+    },
+
+    mrs = function(x, Ind) {
+      stopifnot(is.data.table(x))
+      pid_col <- Ind$get_id_col()
+      stopifnot(pid_col %in% names(x))
+      DeriveVar$IND$mrcurr(x, Ind)
+      x[, mrs := ifelse(
+        !mrcurr %in% c(IND$MARITAL_STATUS$MARRIED, IND$MARITAL_STATUS$DE_FACTO),
+        "not in relationship",
+        as.character(mrcurr)
+      )]
     },
 
     age5 = function(x, IndObj)  {
@@ -217,8 +229,7 @@ FilterAgent <- list(
       get_individual_data(x) %>%
         .[sex == IND$SEX$FEMALE &
             age %between% c(RULES$GIVE_BIRTH$AGE_LOWER_BOUND,
-                            RULES$GIVE_BIRTH$AGE_UPPER_BOUND) &
-            !is.na(partner_id)]
+                            RULES$GIVE_BIRTH$AGE_UPPER_BOUND)]
     },
 
     can_leave_parentalhome = function(x) {

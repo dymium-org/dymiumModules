@@ -73,9 +73,9 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   Pop$add_population(ind_data = migrants$ind_data, hh_data = migrants$hh_data)
 
   # keep logs
-  Pop$keep_log(var = "occ:households_immigrated_as_households",
+  Pop$log(desc = "cnt:households_immigrated_as_households",
                value = migrants$hh_data[, .N])
-  Pop$keep_log(var = "occ:individuals_immigrated_as_households",
+  Pop$log(desc = "cnt:individuals_immigrated_as_households",
                value = migrants$ind_data[, .N])
 
   # return the first argument (`object`) to make event functions pipe-able.

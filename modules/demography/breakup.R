@@ -36,11 +36,7 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   Ind <- assign_reference(world, Individual)
 
   # check model
-  if (is.null(model)) {
-    model <- dm_get_model(world, REQUIRED_MODELS)
-  } else {
-    checkmate::assert_names(names(model), type = "unique", identical.to = REQUIRED_MODELS)
-  }
+  model <- pick_models(model, world, REQUIRED_MODELS)
 
   # determine the ids of those whom will under go the event, male initiated event
   TransBreakup <- TransitionBreakup$new(
@@ -85,18 +81,18 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
       breakingup_persons$partner_y[!breakingup_persons$partner_y %in% dups_y]
   }
 
-  Pop$keep_log(
-    var = "occ:breakups",
+  Pop$log(
+    desc = "cnt:breakups",
     value = length(breakingup_persons$partner_x)
   )
 
-  Pop$keep_log(
-    var = "avl:breakups",
+  Pop$log(
+    desc = "avl:breakups",
     value = TransBreakup$get_nrow_result()
   )
 
-  Pop$keep_log(
-    var = "id:individuals_brokenup",
+  Pop$log(
+    desc = "id:individuals_brokenup",
     value = list(append(breakingup_persons$partner_x, breakingup_persons$partner_y))
   )
 

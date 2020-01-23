@@ -78,16 +78,16 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
       separating_couples_list$partner_y[!separating_couples_list$partner_y %in% dups_y]
   }
 
-  Pop$keep_log(
-    var = "occ:separations",
+  Pop$log(
+    desc = "cnt:separations",
     value = length(separator_ids)
   )
-  Pop$keep_log(
-    var = "avl:separations",
+  Pop$log(
+    desc = "avl:separations",
     value = TransSeparate$get_nrow_result()
   )
-  Pop$keep_log(
-    var = "id:individuals_separated",
+  Pop$log(
+    desc = "id:individuals_separated",
     value = list(append(separating_couples_list$partner_x, separating_couples_list$partner_y))
   )
 
