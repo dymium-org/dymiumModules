@@ -122,16 +122,18 @@ create_newborns = function(Pop, ids, sex_ratios) {
       marital_status = constants$IND$MARITAL_STATUS$NOT_APPLICABLE,
       # add parents to newborn
       father_id = partner_ids,
-      mother_id = ids,
-      # default values
-      labour_force_status = "not applicable",
-      student_status = "not attending",
-      industry_of_emp = "not applicable",
-      income = "not applicable",
-      education = "not applicable"
+      mother_id = ids
+      #' default values - if your individual agents have more attributes than 
+      #' the basic ones above then the default values for those attributes should
+      #' be defined here see the lines below for example
+      #' labour_force_status = "not applicable",
+      # student_status = "not attending",
+      # industry_of_emp = "not applicable",
+      # income = "not applicable",
+      # education = "not applicable"
     )] %>%
-    # binding the newborn data with an emptied individual data make sure that
-    # newborn data have the same structure and types as the existing individual data
+    #' binding the newborn data with an emptied individual data make sure that
+    #' newborn data have the same structure and types as the existing individual data
     rbind(Ind$get_data()[0, ], ., fill = TRUE)
 
   # add newborns to the population
