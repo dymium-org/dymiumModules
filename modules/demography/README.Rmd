@@ -18,11 +18,10 @@ library(dymiumCore)
 ```
 # demography module documentation
 
-The demography module provides event functions for simutenouesly simulating the
-dynamics of evolving urban population and their households at the individual-based level. 
-These events are responsible for household formation (marriage, cohabitation, 
-leaving parental home), household dissolutions (separation, divorce, break up), 
-household expansion (birth).
+The demography module provides event functions for simulating the dynamics of evolving urban population and their households at an individual-based level.  These events are responsible for household formation (marriage, cohabitation, 
+leaving parental home), household dissolutions (separation, divorce, break up), household expansion (birth).
+
+Note that, there are hard-coded rules that can be modified, such as the age range in which females can bare a child. See `constants.R`.
 
 # Release note
 
@@ -34,7 +33,7 @@ First release!
 
 ## R packages
 
-R packages: dymiumCore, data.table
+R packages: dymiumCore, data.table, modules, here, checkmate, R6.
 
 # Events
 
@@ -117,8 +116,8 @@ event_demography_birth
 ### Params
 
 * __object__: a [World] object.
-* __model__: a named list that contains path to a MATSim config file.
-  * __fertility__: a binary model to determine weather the female in question is to give birth or not.
+* __model__: a named list.
+  * __fertility__: a binary model to determine whether an eligible female would to have a child or not.
   * __birth_multiplicity__: chance of giving birth to more than one baby. Note that, the current code is only allow for twins but you may modify this to accommodate cases of triplets and more.
   * __birth_sex_ratio__: the chance of giving birth to a female baby vs a male baby.
 
@@ -303,7 +302,7 @@ event_demography_separation
 ### Params
 
 * __object__: a World object.
-* __model__: a named list that contains path to a MATSim config file.
+* __model__: a named list.
 
 ```{r eval}
 model <- 
@@ -360,7 +359,7 @@ event_demography_divorce
 ### Params
 
 * __object__: a World object.
-* __model__: a named list that contains path to a MATSim config file.
+* __model__: a named list.
 
 ```{r}
 model <- list(
@@ -466,7 +465,7 @@ event_demography_breakup
 ### Params
 
 * object: a [World] object.
-* model: a named list that contains path to a MATSim config file.
+* model: a named list.
 
 ```{r}
 model <- 
@@ -524,7 +523,7 @@ event_demography_leavehome
 ### Params
 
 * __object__: a [World] object.
-* __model__: a named list that contains path to a MATSim config file.
+* __model__: a named list.
   * __leavehome_male__: a binary decision for male individuals whether to leave home or not.
   * __leavehome_female__: a binary decision for female individuals whether to leave home or not.
   * __leavehome_hhtype__: a binary choice whether to join a group household or to form a single household.
