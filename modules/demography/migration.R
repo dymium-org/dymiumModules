@@ -19,25 +19,25 @@ REQUIRED_MODELS <- c("migrant_individuals", "migrant_households")
 #' @param target a positive integers or a list of positive integers
 #' @param time_steps positive integer()
 #'
-#' @return object
+#' @return [World]
 run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
-
+  
   checkmate::assert_r6(world, classes = "World")
-
+  
   # early return if `time_steps` is not the current time
   if (!dymiumCore::is_scheduled(time_steps)) {
     return(invisible(world))
   }
-
+  
   lg$info('Running Migration')
-
+  
   Pop <- world$get("Population")
   Ind <- world$get("Individual")
   Hh <- world$get("Household")
-
+  
   # check model
   pick_models(model, world, REQUIRED_MODELS)
-
+  
   # check target
   if (is.null(target)) {
     stop(lg$error("`target` must be specified. In this case, target is the number of households \\
@@ -46,36 +46,36 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
     checkmate::assert_count(target, positive = T, na.ok = FALSE, null.ok = FALSE)
     lg$info("{target} migrant households are joining to the population.")
   }
-
+  
   # draw random migrants
   pid_col <- Ind$get_id_col()
   hid_col <- Hh$get_id_col()
-
+  
   selected_migrant_hh <- .util_pick_migrants(ids = model$migrant_households[[hid_col]],
                                              weights = model$migrant_households[['weights']],
                                              n = target)
-
+  
   # create migrant data
   migrants <- pop_register(
     x = Pop,
     ind_data = model$migrant_individuals[get(hid_col) %in% selected_migrant_hh],
     hh_data = model$migrant_households[get(hid_col) %in% selected_migrant_hh]
   )
-
+  
   # add migrants to the population
   lg$info("There are {migrants$hh_data[, .N]} migrant households \\
           which made up of {migrants$ind_data[, .N]} individuals (avg. hhsize = {avg_hhsize})",
           avg_hhsize = round(migrants$ind_data[, .N] / migrants$hh_data[, .N], 2))
   Pop$add_population(ind_data = migrants$ind_data, hh_data = migrants$hh_data)
-
+  
   # keep logs
   Pop$log(desc = "cnt:migrant_households",
           value = migrants$hh_data[, .N])
   Pop$log(desc = "cnt:migrant_individuals",
           value = migrants$ind_data[, .N])
-
+  
   # return the first argument (`object`) to make event functions pipe-able.
-  invisible(world)
+  return(invisible(world))
 }
 
 # private utility functions (.util_*) -------------------------------------
