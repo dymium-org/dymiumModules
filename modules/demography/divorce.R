@@ -106,31 +106,46 @@ become_divorced <- function(Pop, ids) {
   }
 
   # change marital status to 'divorced'
-  ind_data[self_idx, marital_status := constants$IND$MARITAL_STATUS$DIVORCED]
+  data.table::set(x = Ind$get_data(copy = FALSE), 
+                  i = self_idx, 
+                  j = "marital_status", 
+                  value = constants$IND$MARITAL_STATUS$DIVORCED)
 
-  # only keep the records of individuals that most recent partners are matched
-  partner_ids <- ind_data[self_idx, .past_partner_id] %>%
-    .[!is.na(.)] %>%
-    .[Ind$is_alive(.)] # partner must be alived
-  partner_idx <- Ind$get_idx(partner_ids)
-  cols <- c(id_col, ".past_partner_id")
-  self_rel <- ind_data[self_idx, .SD, .SDcol = cols] %>%
-    setnames(old = cols, new = c("self", "partner"))
-  partner_rel <- ind_data[partner_idx, .SD, .SDcol = cols] %>%
-    setnames(old = cols, new = c("partner", "self"))
-  partner_ids <- merge(partner_rel, self_rel, by = "self") %>%
-    .[partner.x == partner.y, partner.x]
-
-  # past partner also become divorced if his/her marital status is still 'separated'
-  # and their most recent partner was the initiating individual
-  ind_data[get(id_col) %in% partner_ids & marital_status == constants$IND$MARITAL_STATUS$SEPARATED,
-           marital_status := constants$IND$MARITAL_STATUS$DIVORCED]
-
-  add_history(entity = Ind,
-              ids = partner_ids,
-              event = constants$EVENT$DIVORCE)
-
-  invisible()
+  # `.past_partner_id` only exists in remove_relationship(type = "partner") 
+  # has been called. Meaning if you run divorce before separation there will
+  # not be a `.past_partner_id` column in your individual agents' attribute data
+  if (".past_partner_id" %in% names(ind_data)) {
+    
+    # only keep the records of individuals that most recent partners are matched
+    partner_ids <- ind_data[self_idx, .past_partner_id] %>%
+      .[!is.na(.)] %>%
+      .[Ind$is_alive(.)] # partner must be alived
+    
+    partner_idx <- Ind$get_idx(partner_ids)
+    
+    cols <- c(id_col, ".past_partner_id")
+    
+    self_rel <- ind_data[self_idx, .SD, .SDcol = cols] %>%
+      setnames(old = cols, new = c("self", "partner"))
+    
+    partner_rel <- ind_data[partner_idx, .SD, .SDcol = cols] %>%
+      setnames(old = cols, new = c("partner", "self"))
+    
+    partner_ids <- merge(partner_rel, self_rel, by = "self") %>%
+      .[partner.x == partner.y, partner.x]
+    
+    # past partner also become divorced if his/her marital status is still 'separated'
+    # and their most recent partner was the initiating individual
+    Ind$get_data(copy = FALSE) %>%
+      .[get(id_col) %in% partner_ids &  marital_status == constants$IND$MARITAL_STATUS$SEPARATED,
+        marital_status := constants$IND$MARITAL_STATUS$DIVORCED]  
+    
+    add_history(entity = Ind,
+                ids = partner_ids,
+                event = constants$EVENT$DIVORCE)
+  }
+  
+  return(invisible())
 }
 
 TransitionDivorceMale <- R6Class(
