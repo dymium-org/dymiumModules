@@ -161,11 +161,13 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
       {. == 0}
 
     # create new households that are emptied (no members yet)
-    Hh$add_new_agents(n = sum(move_out_decision_flag))
-
-    # assign new emptied household ids to those that are moving out
-    matches[move_out_decision_flag, hid := Hh$get_new_agent_ids()]
-
+    if (sum(move_out_decision_flag) != 0) {
+      Hh$add_new_agents(n = sum(move_out_decision_flag))  
+      
+      # assign new emptied household ids to those that are moving out
+      matches[move_out_decision_flag, hid := Hh$get_new_agent_ids()]
+    }
+    
     # assign male household ids to those that are moving in
     matches[!move_out_decision_flag, hid := Ind$get_household_ids(id_A)]
 
