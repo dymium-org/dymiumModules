@@ -40,7 +40,7 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   }
 
   # create a reference to the main agent object for easy access
-  Ind <- assign_reference(world, "Individual")
+  Ind <- world$get("Individual")
 
   # increase age by one year
   age(Ind, year_older = 1L)

@@ -95,8 +95,8 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
 # private utility functions (.util_*) -------------------------------------
 become_divorced <- function(Pop, ids) {
 
-  Ind <- assign_reference(Pop, Individual)
-  ind_data <- Ind$get_data(copy = FALSE)
+  Ind <- Pop$get("Individual")
+  ind_data <- Ind$get_data()
   id_col <- Ind$get_id_col()
   self_idx <- Ind$get_idx(ids)
 

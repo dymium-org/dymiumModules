@@ -13,8 +13,7 @@ constants <- modules::use(here::here("modules/demography/constants.R"))
 
 REQUIRED_MODELS <- c("marriage_cohab_male",
                      "marriage_no_cohab_male",
-                     "marriage_no_cohab_female",
-                     "husbandAgeRuleToCreateNewHousehold")
+                     "marriage_no_cohab_female")
 
 #' Marriage
 #'
@@ -33,7 +32,7 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
     return(invisible(world))
   }
 
-  lg$info("Running Marriage2")
+  lg$info("Running Marriage")
 
   # get references of the relavant entities in this event
   Pop <- world$get("Population")

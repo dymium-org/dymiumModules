@@ -9,9 +9,13 @@ modules::expose(here::here('modules/demography/transitions.R'))
 constants <- modules::use(here::here('modules/demography/constants.R'))
 helpers <- modules::use(here::here('modules/demography/helpers.R'))
 
-modules::export('^^run|^util|^test') # default exported functions
+modules::export('^run$|^REQUIRED_MODELS$') # default exported functions
 
-REQUIRED_MODELS <- c("breakup", "breakup_child_custody", "breakup_hhtype", "breakup_hf_random_join")
+REQUIRED_MODELS <-
+  c("breakup",
+    "breakup_child_custody",
+    "breakup_hhtype",
+    "breakup_hf_random_join")
 
 #' Breakup
 #'
@@ -20,7 +24,7 @@ REQUIRED_MODELS <- c("breakup", "breakup_child_custody", "breakup_hhtype", "brea
 #' @param target a positive integers or a list of positive integers
 #' @param time_steps positive integer()
 #'
-#' @return object
+#' @return world
 run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
 
   checkmate::assert_r6(world, classes = "World")
