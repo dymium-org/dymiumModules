@@ -57,6 +57,10 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
     desc = "cnt:marriages_from_cohabitation",
     value = length(cohabiting_male_to_marry_ids))
 
+  Pop$log(
+    desc = "avl:marriages_from_cohabitation",
+    value = TransMarriageCohabited$get_nrow_result())
+
   if (length(cohabiting_male_to_marry_ids) > 0) {
 
     cohabiting_female_to_marry_ids <-
@@ -162,12 +166,12 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
 
     # create new households that are emptied (no members yet)
     if (sum(move_out_decision_flag) != 0) {
-      Hh$add_new_agents(n = sum(move_out_decision_flag))  
-      
+      Hh$add_new_agents(n = sum(move_out_decision_flag))
+
       # assign new emptied household ids to those that are moving out
       matches[move_out_decision_flag, hid := Hh$get_new_agent_ids()]
     }
-    
+
     # assign male household ids to those that are moving in
     matches[!move_out_decision_flag, hid := Ind$get_household_ids(id_A)]
 

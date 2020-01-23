@@ -46,7 +46,7 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   )
 
   single_birth_giver_ids <-
-    TransBirth$get_decision_maker_ids("yes")
+    TransBirth$get_result()[response == "yes", id]
 
   # simulate twins birth
   TransTwinBirth <- TransitionTwinsBirth$new(
@@ -56,7 +56,7 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   )
 
   twins_birth_giver_ids <-
-    TransTwinBirth$get_decision_maker_ids("twins")
+    TransTwinBirth$get_result()[response == "twins", id]
 
   # the length of this vector is equal to the total number of births which is
   # represented by their mothers' id. For example, if individual with id = 1 is
@@ -123,7 +123,7 @@ create_newborns = function(Pop, ids, sex_ratios) {
       # add parents to newborn
       father_id = partner_ids,
       mother_id = ids
-      #' default values - if your individual agents have more attributes than 
+      #' default values - if your individual agents have more attributes than
       #' the basic ones above then the default values for those attributes should
       #' be defined here see the lines below for example
       #' labour_force_status = "not applicable",
@@ -144,7 +144,7 @@ create_newborns = function(Pop, ids, sex_ratios) {
   invisible()
 }
 
-TransitionBirth <- R6Class(
+TransitionBirth <- R6::R6Class(
   classname = "TransitionBirth",
   inherit = dymiumCore::TransitionClassification,
   public = list(
@@ -166,6 +166,6 @@ TransitionBirth <- R6Class(
   )
 )
 
-TransitionTwinsBirth <- R6Class(classname = "TransitionTwinsBirth",
+TransitionTwinsBirth <- R6::R6Class(classname = "TransitionTwinsBirth",
                                 inherit = TransitionClassification,
                                 public = list())

@@ -31,16 +31,12 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
 
   lg$info('Running Migration')
 
-  Pop <- assign_reference(world, Population)
-  Ind <- assign_reference(world, Individual)
-  Hh <- assign_reference(world, Household)
+  Pop <- world$get("Population")
+  Ind <- world$get("Individual")
+  Hh <- world$get("Household")
 
   # check model
-  if (is.null(model)) {
-    model <- dm_get_model(world, REQUIRED_MODELS)
-  } else {
-    checkmate::assert_names(names(model), type = "unique", identical.to = REQUIRED_MODELS)
-  }
+  pick_models(model, world, REQUIRED_MODELS)
 
   # check target
   if (is.null(target)) {
@@ -73,10 +69,10 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   Pop$add_population(ind_data = migrants$ind_data, hh_data = migrants$hh_data)
 
   # keep logs
-  Pop$log(desc = "cnt:households_immigrated_as_households",
-               value = migrants$hh_data[, .N])
-  Pop$log(desc = "cnt:individuals_immigrated_as_households",
-               value = migrants$ind_data[, .N])
+  Pop$log(desc = "cnt:migrant_households",
+          value = migrants$hh_data[, .N])
+  Pop$log(desc = "cnt:migrant_individuals",
+          value = migrants$ind_data[, .N])
 
   # return the first argument (`object`) to make event functions pipe-able.
   invisible(world)
