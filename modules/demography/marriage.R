@@ -207,7 +207,7 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   n_marriages <- n_marriage_cohab + n_marriages_no_cohab
   lg$info("There were {n_marriages} marriages occured \\
           (priorly cohabited: {n_marriage_cohab}, \\
-          did not cohabited: {n_marriages_no_cohab})")
+          did not cohabit: {n_marriages_no_cohab})")
   Pop$log(
     desc = "cnt:marriages",
     value = n_marriages)

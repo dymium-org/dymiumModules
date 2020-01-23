@@ -25,6 +25,9 @@ Note that, there are hard-coded rules that can be modified, such as the age rang
 
 # Release note
 
+### version 0.1.2
+- Fixed the type of newborn's default age from numeric to integer.
+
 ### version 0.1.1
 - Updated outdated event `modules` options. Event scipts should only export `run` and `REQUIRED_MODELS`.
 

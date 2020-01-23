@@ -112,7 +112,7 @@ create_newborns = function(Pop, ids, sex_ratios) {
     .[, .SD, .SDcols = attrs_keep] %>%
     # assign attributes
     .[, `:=`(
-      age = 0,
+      age = 0L,
       sex = sample(
         x = names(sex_ratios),
         size = .N,
