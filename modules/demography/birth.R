@@ -4,7 +4,6 @@
 modules::import('dymiumCore')
 modules::import('data.table')
 modules::import("R6", "R6Class")
-modules::import("assertthat", "assert_that")
 modules::expose(here::here('modules/demography/logger.R')) # import lgr's logger. To use the logger use 'lg' (default logger's name).
 constants <- modules::use(here::here('modules/demography/constants.R'))
 helpers <- modules::use(here::here('modules/demography/helpers.R'))
@@ -94,8 +93,9 @@ create_newborns = function(Pop, ids, sex_ratios) {
   partner_ids <-
     Ind$get_attr(x = "partner_id", ids = ids)
 
-  assert_that(all(Ind$get_attr(x = "sex", ids = ids) == constants$IND$SEX$FEMALE),
-              msg = "Birth event is only applicable for female individual agents.")
+  if (!all(Ind$get_attr(x = "sex", ids = ids) == constants$IND$SEX$FEMALE)) {
+    stop("Birth event is only applicable for female individual agents.")
+  }
 
   # generate new ids
   newborn_ids <- Ind$generate_new_ids(n = length(ids))
