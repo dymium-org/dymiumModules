@@ -11,7 +11,9 @@ helpers <- modules::use(here::here('modules/demography/helpers.R'))
 
 modules::export('^^run|^util|^test') # default exported functions
 
-REQUIRED_MODELS <- c("separate_male", "separate_child_custody", "separate_hhtype",
+REQUIRED_MODELS <- c("separate_male", 
+                     "separate_child_custody", 
+                     "separate_hhtype",
                      "separate_hf_random_join")
 
 #' Separation
