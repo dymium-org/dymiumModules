@@ -4,12 +4,11 @@
 modules::import('dymiumCore')
 modules::import('data.table')
 modules::import("R6", "R6Class")
-modules::import("assertthat", "assert_that")
 modules::expose(here::here('modules/demography/logger.R')) # import lgr's logger. To use the logger use 'lg' (default logger's name).
 constants <- modules::use(here::here('modules/demography/constants.R'))
 helpers <- modules::use(here::here('modules/demography/helpers.R'))
 
-modules::export('^^run|^util|^test') # default exported functions
+modules::export('^run$|^REQUIRED_MODELS$') # default exported functions
 
 REQUIRED_MODELS <- c("fertility", "birth_multiplicity", "birth_sex_ratio")
 
@@ -37,21 +36,14 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   Ind <- assign_reference(world, Individual)
 
   # check model
-  if (is.null(model)) {
-    model <- dm_get_model(world, REQUIRED_MODELS)
-  } else {
-    checkmate::assert_names(names(model), type = "unique", identical.to = REQUIRED_MODELS)
-  }
+  model <- pick_models(model, world, REQUIRED_MODELS)
 
   # create a transition
   TransBirth <- TransitionBirth$new(
     x = Ind,
     model = model$fertility,
-    target = target$giveBirth
+    target = target$fertility
   )
-
-  all_birth_giver_ids <-
-    Ind$get_data(ids = TransBirth$get_result()[['id']])
 
   single_birth_giver_ids <-
     TransBirth$get_decision_maker_ids("yes")
@@ -64,7 +56,7 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   )
 
   twins_birth_giver_ids <-
-    TransTwinBirth$get_decision_maker_ids("2")
+    TransTwinBirth$get_decision_maker_ids("twins")
 
   # the length of this vector is equal to the total number of births which is
   # represented by their mothers' id. For example, if individual with id = 1 is
@@ -72,17 +64,15 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   all_birth_giver_ids <-
     c(single_birth_giver_ids, twins_birth_giver_ids)
 
-  Pop$keep_log(var = "count:births", value = length(all_birth_giver_ids))
-  Pop$keep_log(var = "id:birth_givers", value = list(unique(all_birth_giver_ids)))
-  Pop$keep_log(var = "occ:gave_birth", value = length(single_birth_giver_ids))
-  Pop$keep_log(var = "avl:gave_birth", value = TransBirth$get_nrow_result())
+  Pop$log(desc = "cnt:births", value = length(all_birth_giver_ids))
+  Pop$log(desc = "cnt:gave_birth", value = length(single_birth_giver_ids))
+  Pop$log(desc = "avl:gave_birth", value = TransBirth$get_nrow_result())
 
   lg$info("There are {length(all_birth_giver_ids)} births from {uniqueN(all_birth_giver_ids)} birth givers.")
 
   if (length(all_birth_giver_ids) > 0) {
-
     # create newborns
-    .util_create_newborns(
+    create_newborns(
       Pop = Pop,
       ids = all_birth_giver_ids,
       sex_ratios = model$birth_sex_ratio
@@ -96,15 +86,16 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
 }
 
 # private utility functions (.util_*) -------------------------------------
-.util_create_newborns = function(Pop, ids, sex_ratios) {
+create_newborns = function(Pop, ids, sex_ratios) {
 
   Ind <- assign_reference(Pop, Individual)
 
   partner_ids <-
     Ind$get_attr(x = "partner_id", ids = ids)
 
-  assert_that(all(Ind$get_attr(x = "sex", ids = ids) == constants$IND$SEX$FEMALE),
-              msg = "Birth event is only applicable for female individual agents.")
+  if (!all(Ind$get_attr(x = "sex", ids = ids) == constants$IND$SEX$FEMALE)) {
+    stop("Birth event is only applicable for female individual agents.")
+  }
 
   # generate new ids
   newborn_ids <- Ind$generate_new_ids(n = length(ids))
@@ -131,16 +122,18 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
       marital_status = constants$IND$MARITAL_STATUS$NOT_APPLICABLE,
       # add parents to newborn
       father_id = partner_ids,
-      mother_id = ids,
-      # default values
-      labour_force_status = "not applicable",
-      student_status = "not attending",
-      industry_of_emp = "not applicable",
-      income = "not applicable",
-      education = "not applicable"
+      mother_id = ids
+      #' default values - if your individual agents have more attributes than 
+      #' the basic ones above then the default values for those attributes should
+      #' be defined here see the lines below for example
+      #' labour_force_status = "not applicable",
+      # student_status = "not attending",
+      # industry_of_emp = "not applicable",
+      # income = "not applicable",
+      # education = "not applicable"
     )] %>%
-    # binding the newborn data with an emptied individual data make sure that
-    # newborn data have the same structure and types as the existing individual data
+    #' binding the newborn data with an emptied individual data make sure that
+    #' newborn data have the same structure and types as the existing individual data
     rbind(Ind$get_data()[0, ], ., fill = TRUE)
 
   # add newborns to the population
@@ -157,7 +150,18 @@ TransitionBirth <- R6Class(
   public = list(
     filter = function(.data) {
       .data %>%
-        helpers$FilterAgent$Ind$can_give_birth()
+        helpers$FilterAgent$Ind$can_give_birth(.)# %>%
+        # helpers$FilterAgent$Ind$is_in_relationship(.)
+    },
+    mutate = function(.data) {
+      Ind <- private$.AgtObj
+      .data %>%
+        helpers$DeriveVar$IND$has_resident_children(x = ., Ind) %>%
+        helpers$DeriveVar$IND$n_resident_children(x = ., Ind) %>%
+        helpers$DeriveVar$IND$age_youngest_resident_child(x = ., Ind) %>%
+        helpers$DeriveVar$IND$age5(x = ., Ind) %>%
+        helpers$DeriveVar$IND$n_children(x = ., Ind) %>%
+        helpers$DeriveVar$IND$mrs(x = ., Ind)
     }
   )
 )
@@ -165,7 +169,3 @@ TransitionBirth <- R6Class(
 TransitionTwinsBirth <- R6Class(classname = "TransitionTwinsBirth",
                                 inherit = TransitionClassification,
                                 public = list())
-
-# exported utility functions (util_*) -------------------------------------
-util_function <- function(x) {}
-

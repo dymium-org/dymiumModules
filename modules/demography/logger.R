@@ -9,7 +9,7 @@
 # the color modification you will need to have 'crayon' package installed.
 #
 #
-# TL;DR - to use logger put this 'modules::expose('modules/matsim/logger.R')' in your
+# TL;DR - to use logger put this 'modules::expose(here::here('modules/matsim/logger.R')') in your
 #         event script. Then use the following commands.
 #
 # > lg$info('I am the info-level logger')
@@ -32,5 +32,3 @@ logfile <- file.path(dymiumCore::active_scenario()$scenario_dir, "log")
 fs::file_create(logfile)
 lg$add_appender(lgr::AppenderFile$new(logfile, layout = lgr::LayoutJson$new()))
 lg$set_propagate(FALSE)
-
-

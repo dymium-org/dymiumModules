@@ -8,7 +8,7 @@ modules::expose(here::here('modules/demography/logger.R')) # import lgr's logger
 constants <- modules::use(here::here('modules/demography/constants.R'))
 helpers <- modules::use(here::here('modules/demography/helpers.R'))
 
-modules::export('^^run|^util|^test') # default exported functions
+modules::export('^run$|^REQUIRED_MODELS$') # default exported functions
 
 REQUIRED_MODELS <- c("death")
 
@@ -34,76 +34,67 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   Pop <- assign_reference(world, Population)
   Ind <- assign_reference(world, Individual)
 
-  # check model
-  if (is.null(model)) {
-    model <- dm_get_model(world, REQUIRED_MODELS)
-  } else {
-    checkmate::assert_names(names(model), type = "unique", identical.to = REQUIRED_MODELS)
-  }
+  # pick models
+  model <- pick_models(model, world, REQUIRED_MODELS)
 
-  dying_persons <- .util_find_dying_persons(
-    Pop = Pop,
-    model = model$death,
-    target = target
-  )
+  # the start of death event --------
+  # ids of dying persons
+  dying_persons <-
+    find_dying_persons(Pop = Pop,
+                             model = model$death,
+                             target = target)
 
   n_deaths <- length(dying_persons)
 
   lg$info('There are {n_deaths} deaths')
-  Pop$keep_log(var = "occ:deaths", value = n_deaths)
+  Pop$log(desc = "cnt:deaths", value = n_deaths)
 
   if (n_deaths > 0) {
-
-    Pop$keep_log(var = "id:individuals_died", value = list(dying_persons))
-
-    partner_ids <-
-      Ind$get_attr(x = "partner_id", ids = dying_persons) %>%
-      .[!is.na(.)]
-
+    Pop$log(desc = "id:individuals_died", value = list(dying_persons))
+    # some individual agents may not have a partner hence NAs will be returned
+    # but this will be ignore by the become_widowed() function.
+    partner_ids <- Ind$get_attr(x = "partner_id", ids = dying_persons)
     if (length(partner_ids) > 0) {
-
-      .util_become_widowed(Ind, ids = partner_ids)
-
+      become_widowed(Ind, ids = partner_ids)
     }
-
-    .util_die(Ind, ids = dying_persons)
-
+    die(Ind, ids = dying_persons)
     Pop$update()
   }
-
   invisible(world)
 }
 
 # private utility functions (.util_*) -------------------------------------
-.util_find_dying_persons = function(Pop, model, target) {
+find_dying_persons = function(Pop, model, target) {
 
   Ind <- assign_reference(Pop, Individual)
 
-  deathDecision <- TransitionDeath$new(x = Ind,
-                                       model = model,
-                                       target = target)
+  deathDecision <- TransitionDeath$new(x = Ind, model = model, target = target)
 
-  Pop$keep_log(var = "avl:deaths", value = deathDecision$get_nrow_result())
+  Pop$log(desc = "avl:deaths", value = deathDecision$get_nrow_result())
 
   return(deathDecision$get_decision_maker_ids('yes'))
 
 }
 
-.util_become_widowed = function(Ind, ids) {
+become_widowed = function(Ind, ids) {
 
-  assert_that(Ind$ids_exist(ids = ids))
+  # filter out NAs,
+  ids <- ids[!is.na(ids)]
+
+  check_entity_ids(Ind, ids)
 
   Ind$remove_relationship(ids = ids, type = "partner")
 
-  Ind$get_data(copy = FALSE)[get(Ind$get_id_col()) %in% ids,
-                              marital_status := constants$IND$MARITAL_STATUS$WIDOWED]
+  Ind$get_data(copy = FALSE) %>%
+    .[get(Ind$get_id_col()) %in% ids,
+      marital_status := constants$IND$MARITAL_STATUS$WIDOWED]
 
   add_history(entity = Ind, ids = ids, constants$EVENT$WIDOWED)
 
   invisible()
 }
 
-.util_die = function(Ind, ids) {
+die = function(Ind, ids) {
   Ind$remove(ids = ids)
   add_history(entity = Ind,
               ids = ids,

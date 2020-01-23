@@ -11,17 +11,17 @@ output:
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  eval = FALSE
+  eval = TRUE
 )
-knitr::opts_knit$set(root.dir = normalizePath(rprojroot::find_rstudio_root_file()))
+library(dymiumCore)
+# knitr::opts_knit$set(root.dir = normalizePath(rprojroot::find_rstudio_root_file()))
 ```
 # demography module documentation
 
-The demography module provides event functions for simutenouesly simulating the
-dynamics of evolving urban population and their households at the individual-based level. 
-These events are responsible for household formation (marriage, cohabitation, 
-leaving parental home), household dissolutions (separation, divorce, break up), 
-household expansion (birth).
+The demography module provides event functions for simulating the dynamics of evolving urban population and their households at an individual-based level.  These events are responsible for household formation (marriage, cohabitation, 
+leaving parental home), household dissolutions (separation, divorce, break up), household expansion (birth).
+
+Note that, there are hard-coded rules that can be modified, such as the age range in which females can bare a child. See `constants.R`.
 
 # Release note
 
@@ -33,32 +33,17 @@ First release!
 
 ## R packages
 
-R packages: dymiumCore, data.table
+R packages: dymiumCore, data.table, modules, here, checkmate, R6.
 
 # Events
 
 ## Aging
 
-### Usage 
-
-```{r, eval = FALSE}
-event_demography_age <- modules::use("modules/demography/age.R")
-event_demography_age$run(world, model = NULL, target = NULL, time_steps = NULL)
-```
-
-### Params
-
-* __object__: a World object.
-* __model__: NULL, this event doesn't require this argument.
-* __target__: NULL, this event doesn't require this argument.
-* __time_steps__: a integer vector that contains the time steps in which this event
-should be run.
-
 ### Description
 
-Increase the age of all individual agents by 1 which is equipvalent to one year. 
+Increase age of all `Individual` agents by 1, which is equipvalent to one year. 
 
-### Note
+<details>
 
 If there are any attributes that should be updated depending on the age of agent
 then it can be implemented inside this event. For example, currently there are 
@@ -69,33 +54,74 @@ hence once they turn 16 their marital status will be changed from "not applicabl
 to "never married" which allows them to be considered when the marriage event and
 the cohabitation event are being simulated.
 
-### Example
+</details>
 
-```{r}
-create_toy_world()
-
-world %>%
-  event_demography_age$run(.)
-```
-
-## Birth
 
 ### Usage 
 
-```{r, eval = FALSE}
-event_demography_birth <- modules::use("modules/demography/birth.R")
-event_demography_birth$run(world, model = NULL, target = NULL, time_steps = NULL)
+```{r}
+event_demography_age <- modules::use(here::here("modules/demography/age.R"))
+```
+```{r, echo = FALSE}
+event_demography_age
 ```
 
 ### Params
 
+* __object__: a World object.
+* __model__: NULL, this event doesn't require this argument.
+* __target__: NULL, this event doesn't require this argument.
+* __time_steps__: a integer vector that contains the time steps in which this event
+should be run.
+
+### Example
+
+```{r eval = TRUE}
+create_toy_world()
+
+event_demography_age <- modules::use(here::here("modules/demography/age.R"))
+
+# summary of 'age' attribute before ageing
+summary(world$entities$Individual$get_attr(x = "age"))
+
+world %>%
+  event_demography_age$run(.)
+
+# summary of 'age' attribute after ageing 
+summary(world$entities$Individual$get_attr(x = "age"))
+```
+
+## Birth
+
+### Description
+
+The birth event adds newborns to the population by simulating the chance for fertile individual agents to give birth.
+
+<details>
+
+Newborns inherit some attributes from their mothers such as household id and dwelling id. Their mother id and father id fields will be set at the time of their birth and a new unique id will be assigned to them. If your `Individual` agents have more attributes than the basic ones in `toy_individuals` then you should modify the `birth` event script to set the default values for those extra attributes. See `create_newborns()` inside the event script. 
+
+</details>
+
+### Usage 
+
+```{r}
+event_demography_birth <- modules::use(here::here("modules/demography/birth.R"))
+```
+```{r, echo = FALSE}
+event_demography_birth
+```
+
+
+### Params
+
 * __object__: a [World] object.
-* __model__: a named list that contains path to a MATSim config file.
-  * __fertility__: a binary model to determine weather the female in question is to give birth or not.
+* __model__: a named list.
+  * __fertility__: a binary model to determine whether an eligible female would to have a child or not.
   * __birth_multiplicity__: chance of giving birth to more than one baby. Note that, the current code is only allow for twins but you may modify this to accommodate cases of triplets and more.
   * __birth_sex_ratio__: the chance of giving birth to a female baby vs a male baby.
 
-```{r eval = FALSE}
+```{r}
 model <- list(fertility = list(yes = 0.05, no = 0.95),
               birth_multiplicity = list("single" = 0.97, "twins" = 0.03),
               birth_sex_ratio = list(male = 0.51, female = 0.49))
@@ -105,28 +131,43 @@ model <- list(fertility = list(yes = 0.05, no = 0.95),
 * time_steps: a integer vector that contains the time steps in which this event
 should be run.
 
-### Description
-
-### Note
-
 ### Example
 
 ```{r}
-NULL
+create_toy_world()
+
+event_demography_birth <- modules::use(here::here("modules/demography/birth.R"))
+
+# Total number of individuals before a run of the birth event
+world$entities$Individual$n()
+
+world %>%
+  event_demography_birth$run(., model = model)
+
+# Total number of individuals after a run of the birth event
+world$entities$Individual$n()
 ```
 
 ## Death
 
 ### Usage 
 
+```{r}
+event_demography_birth <- modules::use(here::here("modules/demography/birth.R"))
+```
+```{r}
+event_demography_birth
+```
+
+
 ### Params
 
-* __world__: a World object.
+* __world__: a `World` object.
 * __model__: a named list.
   * __death__: a binary model.
   
-```{r eval = FALSE}
-model <- list(death = list(yes = 0.03, no = 0.97))
+```{r}
+model <- list(death = list(yes = 0.1, no = 0.9))
 ```
 
 * __target__: default as `NULL` or a named list.
@@ -135,60 +176,45 @@ should be run.
 
 ### Description
 
-Simulate deaths of individual agents. It removes the dying individual agents from
-the individual database and also updates attributes (such as marital status, household size)
-of any agents that are related to the dying agents.
+Removes dying individual agents from the individual database and also updates any affected attributes (such as marital status, household size) the agents that are related to the dying agents.
 
-### Note
+<details>
 
 The marital status of those individual agents whom their partner has died will be
 labelled as "widowed". To retrive the data of all agents that have been removed you
 through the death event use the `get_removed_data()` method.
 
+</details>
+
+
 ### Example
 
 ```{r}
-NULL
+create_toy_world()
+
+event_demography_death <- modules::use(here::here("modules/demography/death.R"))
+
+# Total number of individuals before a run of the death event
+world$entities$Individual$n()
+# Distribution of marital status before a run of the death event
+table(world$entities$Individual$get_attr("marital_status"))
+
+world %>%
+  event_demography_death$run(., model = model)
+
+# Total number of individuals after a run of the death event
+world$entities$Individual$n()
+# Distribution of marital status after a run of the death event
+table(world$entities$Individual$get_attr("marital_status"))
 ```
  
 ## Marriage
 
-### Usage 
-
-### Params
-
-* __object__: a [World] object.
-* __model__: a named list.
-  * __marriage_cohab_male__: a binary model that determines whether a cohabitating couple will get married. This is based on attributes of the male partner.
-  * __marriage_no_cohab_male__: a binary model that determines the chance for eligible males to enter the marital market.
-  * __marriage_no_cohab_female__: a binary model that determines the chance for eligible females to enter the marital market.
-  * __husbandAgeRuleToCreateNewHousehold__: a binary model that determines the chance of the couple to form a new household or merge their households. 
-
-```{r eval = FALSE}
-model <- list(
-  marriage_cohab_male = list(yes = 0.1, no = 0.9),
-  marriage_no_cohab_male = list(yes = 0.1, no = 0.9),
-  marriage_no_cohab_female = list(yes = 0.1, no = 0.9),
-  husbandAgeRuleToCreateNewHousehold = list(age = 30)
-)
-```
-
-* __target__: a named list
-
-```{r}
-target <- list(
-  yes = 100
-)
-```
-
-* __time_steps__: a integer vector that contains the time steps in which this event
-should be run.
-
 ### Description
 
-This event forms a marriage relationship between a cohabiting couple and two individuals that are not in a relationship. After the marriage is formed, the newly wedded couple then decide whether to form a new household or to merge their households into one. When forming a new household, regardless of their household formation decision, any related individuals (i.e. dependent children) to both individuals will also follow to the new household.
+This event forms marriage relationships between cohabiting couples and any two opposite-sex individuals that are not in a relationship. After the marriage is formed, the newly wedded couple then decide whether to form a new household or to merge their households into one. When forming a new household, regardless of their household formation decision, any related individuals (i.e. dependent children) to both individuals will also follow to the new household.
 
-### Note
+<details>
 
 As you can see there are four models that shall be supplied to determine the likelihood in each stage of the marriage event. The first stage is to marry cohabiting couples based on the likelihood produces by the `marriage_cohab_male` model. The second stage is to marry eligible, single individual agents. The probabilities for the individual agents to enter the marital market come from the Monte Carlo simulation result performed using the `marriage_no_cohab_male` and `marriage_no_cohab_female` models on the individual agents' attributes. Then all participating individual agents are paired based on a given rule. The rule can be as simple as all agents prefer to match with an agent that has the minimum age difference to theirs. See `StochasticMarriageMarket` and `OptimalMarriageMarket` for the matching strategies available in `modules/demography/marriage.R`. Note that, if there are more agents of one gender than other in the marital market then the number of maximum matches will be equal to the number of individual agents with the lesser number. Those who are not matched will remain single after the event has ended. The current implementation doesn't include marriages between same-sex couples. After the matching step, all newly formed couples will decide whether they will form a new household (both agents leave their current households) or for the wife and her related individuals to join her husband's household. The current implementation applies a very simple rule which is likely to be wrong and should be replaced if there is a better assumption or model. The current rule is that for all newly wedded couples if their male partner aged more than the number given in `husbandAgeRuleToCreateNewHousehold` they will create a new household.
 
@@ -199,177 +225,405 @@ TLDR;
 - Doesn't consider marriages between same-sex couples.
 - The matching strategy for pairing individuals can be configured, either optimal or stochastic.
 
+
+</details>
+
+### Usage 
+
+```{r}
+event_demography_marriage <- modules::use(here::here("modules/demography/marriage.R"))
+```
+
+```{r echo = FALSE}
+event_demography_marriage
+```
+
+
+
+### Params
+
+* __object__: a [World] object.
+* __model__: a named list.
+  * __marriage_cohab_male__: a binary model that determines whether a cohabitating couple will get married. This is based on attributes of the male partner.
+  * __marriage_no_cohab_male__: a binary model that determines the chance for eligible males to enter the marital market.
+  * __marriage_no_cohab_female__: a binary model that determines the chance for eligible females to enter the marital market.
+
+```{r}
+model <- list(
+  marriage_cohab_male = list(yes = 0.1, no = 0.9),
+  marriage_no_cohab_male = list(yes = 0.1, no = 0.9),
+  marriage_no_cohab_female = list(yes = 0.1, no = 0.9)
+)
+```
+
+* __target__: a named list
+* __time_steps__: a integer vector that contains the time steps in which this event
+should be run.
+
 ### Example
 
 ```{r}
-NULL
+create_toy_world()
+
+event_demography_marriage <- modules::use(here::here("modules/demography/marriage.R"))
+
+# Distribution of marital status before a run of the marriage event
+table(world$entities$Individual$get_attr("marital_status"))
+
+world %>%
+  event_demography_marriage$run(., model = model)
+
+# Distribution of marital status before a run of the marriage event
+table(world$entities$Individual$get_attr("marital_status"))
 ```
 
 ## Separation
 
+### Description
+
+Separation is the stage before a couple is officially divorced. In the Australian context, all married couples that would like to get divorced must register their separtion one year prior to becoming legally divorced. Hence, this event simulates that process. 
+
+<details>
+
+Separation is the first step before couples can be officially divorced. This module assume that no couples will recoupled once they have decided to separate. 
+
+</details>
+
 ### Usage 
+
+```{r}
+event_demography_separation <- modules::use(here::here("modules/demography/separation.R"))
+```
+
+```{r echo = FALSE}
+event_demography_separation
+```
 
 ### Params
 
 * __object__: a World object.
-* __model__: a named list that contains path to a MATSim config file.
+* __model__: a named list.
 
-```{r eval = FALSE}
-# config: path to a matsim config file
-# lastIteration: a numeric value that denotes the number of iterations for matsim to run
-model <- list(config = "path/to/config.xml",
-              lastIteration = 10)
+```{r eval}
+model <- 
+  list(
+    separate_male = list(yes = 0.1, no = 0.9),
+    separate_child_custody = list(male = 0.2, female = 0.8),
+    separate_hhtype = list(lone = 0.5, group = 0.5),
+    separate_hf_random_join = list("1" = 0.4, "2" = 0.3, "3" = 0.2, "4" = 0.1)
+  )
 ```
 
 * __target__: NULL
 * time_steps: a integer vector that contains the time steps in which this event
 should be run.
 
-### Description
-
-### Note
 
 ### Example
 
-Separation is the first step before couples can be officially divorced. This module assume that no couples will recoupled once they have decided to separate. 
+```{r}
+create_toy_world()
+
+event_demography_separation <- modules::use(here::here("modules/demography/separation.R"))
+
+# Distribution of marital status before a run of the marriage event
+table(world$entities$Individual$get_attr("marital_status"))
+
+world %>%
+  event_demography_separation$run(., model = model)
+
+# Distribution of marital status before a run of the marriage event
+table(world$entities$Individual$get_attr("marital_status"))
+```
 
 ## Divorce
 
+### Description
+
+When divorce is triggered for a separted individual, his/her ex-partner will also under go divorce **if** the marital status of his/her ex-partner is still 'separated'.  
+
+<details>
+
+</details>
 
 ### Usage 
+
+```{r}
+event_demography_divorce <- modules::use(here::here("modules/demography/divorce.R"))
+```
+
+```{r echo = FALSE}
+event_demography_divorce
+```
 
 ### Params
 
 * __object__: a World object.
-* __model__: a named list that contains path to a MATSim config file.
+* __model__: a named list.
 
-```{r eval = FALSE}
-# config: path to a matsim config file
-# lastIteration: a numeric value that denotes the number of iterations for matsim to run
-model <- list(config = "path/to/config.xml",
-              lastIteration = 10)
+```{r}
+model <- list(
+  divorce_male = list(yes = 0.5, no = 0.9),
+  divorce_female = list(yes = 0.5, no = 0.9)
+)
 ```
 
 * __target__: NULL
 * __time_steps__: a integer vector that contains the time steps in which this event
 should be run.
 
-### Description
-
-### Note
 
 ### Example
 
-When divorce is triggered for a separted individual, his/her ex-partner will also under go divorce **if** the marital status of his/her ex-partner is still 'separated'.  
+```{r}
+create_toy_world()
+
+event_demography_divorce <- modules::use(here::here("modules/demography/divorce.R"))
+
+# Distribution of marital status before a run of the marriage event
+table(world$entities$Individual$get_attr("marital_status"))
+
+world %>%
+  event_demography_divorce$run(., model = model)
+
+# Distribution of marital status before a run of the marriage event
+table(world$entities$Individual$get_attr("marital_status"))
+```
+
 
 ## Cohabitation
 
+### Description
+
+Form cohabitation relationships. Everything is the same with marriage in term of the steps. 
+
+<details>
+
+
+</details>
+
 ### Usage 
+
+```{r}
+event_demography_cohabit <- modules::use(here::here("modules/demography/cohabit.R"))
+```
+
+```{r echo = FALSE}
+event_demography_cohabit
+```
 
 ### Params
 
 * object: a [World] object.
-* model: a named list that contains path to a MATSim config file.
+* model: a named list.
 
-```{r eval = FALSE}
-# config: path to a matsim config file
-# lastIteration: a numeric value that denotes the number of iterations for matsim to run
-model <- list(config = "path/to/config.xml",
-              lastIteration = 10)
+```{r}
+model <- list(
+  cohabitation_male = list(yes = 0.1, no = 0.9),
+  cohabitation_female = list(yes = 0.1, no = 0.9)
+)
 ```
 
-* target: NULL
+* target: a named list.
 * time_steps: a integer vector that contains the time steps in which this event
 should be run.
 
-### Description
-
-### Note
 
 ### Example
+
+```{r}
+create_toy_world()
+
+event_demography_cohabit <- modules::use(here::here("modules/demography/cohabit.R"))
+
+# Distribution of marital status before a run of the marriage event
+table(world$entities$Individual$get_attr("marital_status"))
+
+world %>%
+  event_demography_cohabit$run(., model = model)
+
+# Distribution of marital status before a run of the marriage event
+table(world$entities$Individual$get_attr("marital_status"))
+```
 
 ## Breakup
 
+### Description
+
+Breakup ends cohabitation relationships. 
+
 ### Usage 
+
+```{r}
+event_demography_breakup <- modules::use(here::here("modules/demography/breakup.R"))
+```
+
+```{r echo = FALSE}
+event_demography_breakup
+```
 
 ### Params
 
 * object: a [World] object.
-* model: a named list that contains path to a MATSim config file.
+* model: a named list.
 
-```{r eval = FALSE}
-# config: path to a matsim config file
-# lastIteration: a numeric value that denotes the number of iterations for matsim to run
-model <- list(config = "path/to/config.xml",
-              lastIteration = 10)
+```{r}
+model <- 
+  list(
+    breakup = list(yes = 0.1, no = 0.9),
+    breakup_child_custody = list(male = 0.2, female = 0.8),
+    breakup_hhtype = list(lone = 0.5, group = 0.5),
+    breakup_hf_random_join = list("1" = 0.4, "2" = 0.3, "3" = 0.2, "4" = 0.1)
+  )
 ```
 
-* target: NULL
+* target: a named list.
 * time_steps: a integer vector that contains the time steps in which this event
 should be run.
 
-### Description
-
-### Note
-
 ### Example
+
+```{r}
+create_toy_world()
+
+event_demography_breakup <- modules::use(here::here("modules/demography/breakup.R"))
+
+# Total number of individuals with partner before
+table(is.na(world$entities$Individual$get_attr("partner_id")))
+
+world %>%
+  event_demography_breakup$run(., model = model)
+
+# Total number of individuals with partner after
+table(is.na(world$entities$Individual$get_attr("partner_id")))
+```
 
 ## Leave parental home
 
+### Description
+
+This simulates young adults leaving their parental home.
+
+<details>
+
+This should not include the proportion of people whom leave home to get married or to live with their partner as it has been accounted for in the marriage event and the cohabitation event.
+
+</details>
+
 ### Usage 
+
+```{r}
+event_demography_leavehome <- modules::use(here::here("modules/demography/leavehome.R"))
+```
+
+```{r echo = FALSE}
+event_demography_leavehome
+```
 
 ### Params
 
-* object: a [World] object.
-* model: a named list that contains path to a MATSim config file.
+* __object__: a [World] object.
+* __model__: a named list.
+  * __leavehome_male__: a binary decision for male individuals whether to leave home or not.
+  * __leavehome_female__: a binary decision for female individuals whether to leave home or not.
+  * __leavehome_hhtype__: a binary choice whether to join a group household or to form a single household.
+  * __leavehome_hf_random_join__: a discrete distribution of the household size. For example, if this is `list(1 = 0.5, 2 = 0.3, 3 = 0.1, 4 = 0.1)` there is a 50% chance that an individual leaving their parental home will find a single household to join and a 30% chance to join a two-person household and so on.
 
-```{r eval = FALSE}
-# config: path to a matsim config file
-# lastIteration: a numeric value that denotes the number of iterations for matsim to run
-model <- list(config = "path/to/config.xml",
-              lastIteration = 10)
+```{r}
+model <- list(leavehome_male = list(yes = 0.3, no = 0.7),
+              leavehome_female = list(yes = 0.2, no = 0.8),
+              leavehome_hhtype = list(lone = 0.2, group = 0.8),
+              leavehome_hf_random_join = list("1" = 0.5, "2" = 0.3, "3" = 0.1, "4" = 0.1))
 ```
 
-* target: NULL
-* time_steps: a integer vector that contains the time steps in which this event
+* __target__: `NULL` or a named list.
+* __time_steps__: a integer vector that contains the time steps in which this event
 should be run.
 
-### Description
-
-### Note
 
 ### Example
+
+```{r}
+create_toy_world()
+
+event_demography_leavehome <- modules::use(here::here("modules/demography/leavehome.R"))
+
+# Total number of households before
+world$entities$Household$n()
+
+world %>%
+  event_demography_leavehome$run(., model = model)
+
+# Total number of households after
+world$entities$Household$n()
+```
+
 
 ## Migration
 
+### Description
+
+Add an migrant population to the main population. 
+
+<details>
+
+The migrant population will be assigned new unique ids once it is added. Note that all migrants should have all the same attribute columns (as well as their types) as the main population it is being added to.
+
+</details>
+
 ### Usage 
+
+```{r}
+event_demography_migration <- modules::use(here::here("modules/demography/migration.R"))
+```
+
+```{r echo = FALSE}
+event_demography_migration
+```
 
 ### Params
 
 * object: a [World] object.
-* model: a named list that contains path to a MATSim config file.
+* model: a named list.
+ - migrant_individuals: a data.table that contains migrant individual agents' attribute data.
+ - migrant_households: a data.table that contains migrant household agents' attribute data.
 
-```{r eval = FALSE}
-# config: path to a matsim config file
-# lastIteration: a numeric value that denotes the number of iterations for matsim to run
-model <- list(config = "path/to/config.xml",
-              lastIteration = 10)
+```{r}
+model <- list(
+  migrant_individuals = dymiumCore::toy_individuals, 
+  migrant_households = dymiumCore::toy_households
+)
 ```
 
-* target: NULL
+* target: an integer which indicates how many households should be added.
+
+```{r}
+target = 100
+```
+
 * time_steps: a integer vector that contains the time steps in which this event
 should be run.
 
-### Description
 
 ### Note
 
 ### Example
 
-All operations are done within your R environment with no external dependencies. To use any event function please consider using the following commands instead of using `source("path/to/event/script")`.
-
 ```{r}
-event_demography_age <- modules::use("modules/demography/age.R")
+create_toy_world()
+
+event_demography_migration <- modules::use(here::here("modules/demography/migration.R"))
+
+# Total number of households and individuals before
+world$entities$Household$n()
+world$entities$Individual$n()
+
+world %>%
+  event_demography_migration$run(., model = model, target = target)
+
+# Total number of households and individuals after
+world$entities$Household$n()
+world$entities$Individual$n()
 ```
 
 # Known issues
