@@ -144,7 +144,7 @@ create_newborns = function(Pop, ids, sex_ratios) {
   invisible()
 }
 
-TransitionBirth <- R6::R6Class(
+TransitionBirth <- R6Class(
   classname = "TransitionBirth",
   inherit = dymiumCore::TransitionClassification,
   public = list(
