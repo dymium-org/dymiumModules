@@ -25,82 +25,69 @@ REQUIRED_MODELS <-
 #'
 #' @return world
 run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
-  
+
   # early return if `time_steps` is not the current time
   if (!dymiumCore::is_scheduled(time_steps)) {
     return(invisible(world))
   }
-  
+
   lg$info('Running createVISTADemand')
-  
+
   # check model
-  if (is.null(model)) {
-    model <- dm_get_model(world, REQUIRED_MODELS)
-  } else {
-    checkmate::assert_names(names(model), type = "unique", identical.to = REQUIRED_MODELS)
-  }
-  
+  model <- pick_models(model, world, REQUIRED_MODELS)
+
   # uncomment the line belows if the event doesn't require `model`
   # eg. If the event is deterministic like ageing.
   # if (!is.null(model)) {
   #   lg$warn('`model` will not be used.')
   # }
-  
+
   # uncomment the line belows if the event doesn't require `target`
   # eg. If the event is to be applied to all agents.
   if (!is.null(target)) {
     lg$warn('`target` will not be used.')
   }
-  
+
   # create a reference to the main agent objects for easy access
   Ind <- world$get("Individual")
   Hh <- world$get("Household")
-  
+
   # create travel demand ----------------------------------------------------
-  
+
   # fuse activity pattern to Individual agents.
   create_matsim_plan(trips = fuse_vista(Ind, world$models),
-                     outdir = file.path(active_scenario()$scenario_dir, "inputs/matsim"))
-  
+                     outdir = file.path(get_active_scenario()$scenario_dir, "inputs/matsim"))
+
   # return the first argument (`world`) to make event functions pipe-able.
   invisible(world)
 }
 
-fuse_vista <- function(IndObj, models) {
+fuse_vista <- function(Ind, models) {
   .start_time <- Sys.time()
   lg$info("Fusing VISTA person with dymium individuals.")
-  
+
   # StatMatch only works with data.frames
   don <- models$vista_persons$get() %>%
     .[ADPERSWGT > 0] %>%
     as.data.frame()
-  # for the purpose of matching those who work part-time or full-time will have
-  # their student_status set to 'not attending' as we are relying on the MAINACT column
-  # of the vista trips table.
-  # see https://www.aph.gov.au/About_Parliament/Parliamentary_Departments/Parliamentary_Library/pubs/rp/rp1819/Quick_Guides/NILF
-  # for the definetion of not in labour force status
-  # rec <- IndObj$get_data(ids = sample(IndObj$get_attr(x = IndObj$get_id_col()), 1000)) %>% # for testing with a small sample
-  rec <- IndObj$get_data() %>%
-    .[student_status %in% c('full-time student', 'part-time student') & labour_force_status == 'unemployed',
-      labour_force_status := 'not in the labour force'] %>%
-    .[student_status == 'part-time student' & labour_force_status == 'not applicable',
-      labour_force_status := 'not in the labour force'] %>%
+
+  rec <- Ind$get_data() %>%
     as.data.frame()
-  
+
   # estimate fusion
   fused_gower_result <- StatMatch::RANDwNND.hotdeck(data.rec = rec,
                                                     data.don = don,
-                                                    don.class = c('sex', 'labour_force_status', 'student_status'),
+                                                    don.class = c('sex'),
                                                     match.vars = 'age',
                                                     dist.fun = 'Gower',
                                                     cut.don = 'min',
                                                     weight.don = 'ADPERSWGT')
-  
+
   lg$info('Summary of minimum gower distance fusion result')
   print(summary(fused_gower_result$sum.dist[, 1]))
-  
+
   # build fused persons
-  pid_col <- IndObj$get_id_col()
+  pid_col <- Ind$get_id_col()
   fused_persons <- create.fused(
     data.rec = rec,
     data.don = don,
@@ -112,16 +99,24 @@ fuse_vista <- function(IndObj, models) {
     # make PERSID unique but still retains the original column for merging
     .[, .(VISTA_PERSID = PERSID,
           PERSID = paste0(pid_col, get(pid_col), PERSID))]
-  
+
   lg$info("Activity patterns from {data.table::uniqueN(fused_persons[['VISTA_PERSID']])} unique \\
           person records from VISTA 2009 being used to represent the travel demand \\
           of dymium individuals")
-  
+
   trips <-
     merge(fused_persons, models$vista_trips$get(), by.x = 'VISTA_PERSID', by.y = 'PERSID', all.x = TRUE, allow.cartesian = T) %>%
     # some people didn't make any trips so we need to filter them out
     .[!is.na(TRIPID)]
-  
+
+  # save some stats
+  Ind$log(desc = "cnt:number_of_trips", value = nrow(trips))
+  mode_counts <- table(trips$Mode_Group)
+  for (i in seq_along(mode_counts)) {
+    clean_mode_name <- gsub(" ", "_", tolower(names(mode_counts)[i]))
+    Ind$log(desc = paste0("cnt:ModeOfTransport-", clean_mode_name), value = mode_counts[i])
+  }
+
   lg$info("{nrow(trips)} trips have been generated.")
   lg$info("Finished in ", format(Sys.time() - .start_time))
   invisible(trips)
@@ -134,33 +129,33 @@ create_matsim_plan <-
     .start_time <- Sys.time()
     vec <- rep(NA, 2000000)
     vec_i <- 1
-    
+
     add_to_vec <- function(x) {
       vec[vec_i] <<- x
       vec_i[1] <<- vec_i + 1L
     }
-    
+
     add_activity <- function(type, coord_x, coord_y, end_time) {
       add_to_vec(paste0("<activity type=\"", type, "\" x=\"", coord_x, "\" y=\"", coord_y, "\" end_time=\"", end_time, "\" > </activity>"))
     }
-    
+
     add_last_activity <- function(type, coord_x, coord_y) {
       add_to_vec(paste0("<activity type=\"", type, "\" x=\"", coord_x, "\" y=\"", coord_y, "\" > </activity>"))
     }
-    
+
     add_leg <- function(mode) {
       add_to_vec(paste0("<leg mode=\"", mode, "\" > </leg>"))
     }
-    
+
     add_line <- function(x) {
       add_to_vec(x)
     }
-    
+
     setorder(trips, PERSID, TRIPID)
     all_PERSID <- trips[, unique(PERSID)]
     # utils::head(trips[, .(VISTA_PERSID, PERSID, TRIPID)], 50)
     # browser()
-    
+
     add_line("<!DOCTYPE population SYSTEM \"http://www.matsim.org/files/dtd/population_v6.dtd\">")
     add_line("<population>")
     # for (id in all_PERSID[1:500]) {

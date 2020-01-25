@@ -9,7 +9,7 @@
 
 # If the package dymimCore is not needed you may remove the line below which imports it
 modules::import('dymiumCore')
-modules::import('xml2')
+modules::import('xml2', "xml_find_first", "xml_set_attr", "write_xml", "read_xml")
 modules::import('data.table')
 modules::import('sf')
 modules::import('furrr')
@@ -25,35 +25,123 @@ modules::expose(here::here('modules/matsim/logger.R'))
 MatsimConfig <- R6::R6Class(
   classname = "MatsimConfig",
   public = list(
-    config = NULL,
-    initialize = function(x) {
-      self$config <- xml2::read_xml(x)
+    initialize = function(path) {
+      private$.config <- self$read(path)
     },
 
     set_controler = function(outputDirectory, firstIteration, lastIteration) {
-      controler_node <- xml_find_first(self$config, "//module[@name='controler']")
 
       if (!missing(outputDirectory)) {
-        n <- xml_find_first(controler_node, "param[@name='outputDirectory']")
-        xml_attr(x = n, attr = "value") <- outputDirectory
+        self$set(module_name = "controler",
+                 param_name = "outputDirectory",
+                 value = outputDirectory)
       }
 
       if (!missing(firstIteration)) {
-        n <- xml_find_first(controler_node, "param[@name='firstIteration']")
-        xml_attr(x = n, attr = "value") <- firstIteration
+        self$set(module_name = "controler",
+                 param_name = "firstIteration",
+                 value = firstIteration)
       }
 
       if (!missing(lastIteration)) {
-        n <- xml_find_first(controler_node, "param[@name='lastIteration']")
-        xml_attr(x = n, attr = "value") <- lastIteration
+        self$set(module_name = "controler",
+                 param_name = "lastIteration",
+                 value = lastIteration)
       }
 
       invisible(self)
     },
 
     get_controler = function() {
-      xml_find_first(self$config, "//module[@name='controler']")
+      self$get(module_name = "controler")
+    },
+
+    set_list = function(x) {
+      checkmate::assert_list(x,
+                             types = c("character", "numeric", "integer", "list"),
+                             any.missing = FALSE,
+                             names = "unique",
+                             null.ok = FALSE)
+      x_flatten_vec <- unlist(x)
+      x_names <- strsplit(names(x_flatten_vec), ".", fixed = T)
+      for (i in seq_along(x_flatten_vec)) {
+        self$set(module_name = x_names[[i]][1],
+                 param_name = x_names[[i]][2],
+                 value = x_flatten_vec[[i]])
+      }
+      return(invisible())
+    },
+
+    get_list = function(x) {
+      checkmate::assert_list(x,
+                             types = c("character", "numeric", "integer", "list"),
+                             any.missing = FALSE,
+                             names = "unique",
+                             null.ok = FALSE)
+      x_flatten_vec <- unlist(x)
+      x_names <- strsplit(names(x_flatten_vec), ".", fixed = T)
+      res_ls <- list()
+      for (i in seq_along(x_flatten_vec)) {
+        res_ls[[i]] <- self$get(module_name = x_names[[i]][1], param_name = x_names[[i]][2])
+      }
+      return(res_ls)
+    },
+
+    set = function(module_name, param_name, value) {
+      checkmate::assert(
+        checkmate::check_string(module_name, min.chars = 1, na.ok = FALSE),
+        checkmate::check_string(param_name, min.chars = 1, na.ok = FALSE),
+        checkmate::check_scalar(value, na.ok = FALSE),
+        combine = "and"
+      )
+      param_node <- self$get(module_name, param_name)
+      xml_set_attr(x = param_node, attr = "value", value = value)
+      return(invisible())
+    },
+
+    get = function(module_name, param_name) {
+      module_node <-
+        xml_find_first(private$.config,
+                       paste0("//module[@name='", module_name, "']"))
+
+      if (is.na(module_node)) {
+        stop(paste0("module_name {", module_name, "} doesn't exist in the module nodes."))
+      }
+
+      if (missing(param_name)) {
+        return(module_node)
+      }
+
+      param_node <-
+        xml_find_first(module_node,
+                       paste0("param[@name='", param_name, "']"))
+
+      if (is.na(param_node)) {
+        stop(paste0("param_name {", param_name, "} doesn't exist in the param nodes."))
+      }
+
+      return(param_node)
+    },
+
+    #' @param path path to a MATSim config file.
+    read = function(path) {
+      private$.config <- xml2::read_xml(path)
+    },
+
+    #' @param path path to write a MATSim config file
+    write = function(path) {
+      xml2::write_xml(x = private$.config, path)
     }
+  ),
+
+  active = list(
+    config = function() {
+      base::get(".config", envir = private)
+    }
+  ),
+
+  private = list(
+    .config = NULL
   )
 )
 

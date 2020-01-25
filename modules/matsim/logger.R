@@ -31,7 +31,7 @@ lg$appenders$cons$set_layout(
            {crayon::magenta(.logger$name)} {caller}: {msg}'
   )
 )
-logfile <- file.path(dymiumCore::active_scenario()$scenario_dir, "log")
+logfile <- file.path(dymiumCore::get_active_scenario()$scenario_dir, "log")
 fs::file_create(logfile)
 lg$add_appender(lgr::AppenderFile$new(logfile, layout = lgr::LayoutJson$new()))
 lg$set_propagate(FALSE)
