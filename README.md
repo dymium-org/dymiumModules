@@ -11,8 +11,6 @@ status](https://travis-ci.org/dymium-org/dymiumModules.svg?branch=master)](https
 coverage](https://codecov.io/gh/dymium-org/dymiumModules/branch/master/graph/badge.svg)](https://codecov.io/gh/dymium-org/dymiumModules?branch=master)
 [![AppVeyor build
 status](https://ci.appveyor.com/api/projects/status/github/dymium-org/dymiumModules?branch=master&svg=true)](https://ci.appveyor.com/project/dymium-org/dymiumModules)
-[![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 <!-- badges: end -->
 
 A repository for sharing modules developed with dymiumCore. To share
