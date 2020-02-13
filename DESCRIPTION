@@ -1,6 +1,6 @@
 Package: dymiumModules
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Title: a package
+Version: 0.1.0
 Authors@R: 
     person(given = "First",
            family = "Last",
@@ -14,6 +14,15 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 Suggests: 
-    testthat,
-    covr
+    testthat (>= 2.1.0),
+    covr,
+    rJava
 RoxygenNote: 7.0.2
+Imports: 
+    data.table (>= 1.12.8),
+    magrittr,
+    dymiumCore (>= 0.1.0),
+    modules (>= 0.8.0),
+    here
+Remotes:
+  github::dymium-org/dymiumCore

@@ -4,7 +4,7 @@
 \name{dymiumModules-package}
 \alias{dymiumModules}
 \alias{dymiumModules-package}
-\title{dymiumModules: What the Package Does (One Line, Title Case)}
+\title{dymiumModules: a package}
 \description{
 What the package does (one paragraph).
 }
