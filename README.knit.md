@@ -4,12 +4,7 @@ output: github_document
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
+
 
 # dymiumModules
 
@@ -38,7 +33,8 @@ under your active R project directory. Inside the `modules` folder you will find
 another folder called `mymodule` which is the name of your new module and inside
 that you will find `logger.R`, `helpers.R`, `constants.R` and a `testthat` folder.
 
-```{r, eval = FALSE}
+
+```r
 library("dymiumCore")
 use_module(name = "mymodule")
 ```
@@ -46,7 +42,8 @@ use_module(name = "mymodule")
 To add new events to your newly create module you can use the `use_event()` function
 as in the example below.
 
-```{r, eval = FALSE}
+
+```r
 use_event("event1", "mymodule")
 use_event("event2", "mymodule", with_comments = TRUE) # with recommendations
 use_event("event3", "mymodule", with_comments = FALSE) # without recommendations
@@ -60,7 +57,8 @@ Before downloading a module, make sure you setup and use an RStudio project. The
 download module will be saved to the 'modules' folder (this will be created if it 
 is not already existed) to the root of your working directory. 
 
-```{r, eval = FALSE}
+
+```r
 download_module(name = 'test')
 ```
 
