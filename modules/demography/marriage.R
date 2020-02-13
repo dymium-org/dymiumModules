@@ -181,11 +181,18 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
       id_B_resident_children = Ind$get_resident_children(id_B)
     )]
 
+    # assign new household ids for the children to move to with their parents
     resident_children <-
       rbind(matches[, .(hid, resident_children = id_A_resident_children)],
             matches[, .(hid, resident_children = id_B_resident_children)]) %>%
       .[, lapply(.SD, unlist), by = hid] %>%
       data.table:::na.omit.data.table()
+    
+    #' remove resident children that are entering also cohabitation -----------
+    #' It is highly likely that newly cohabited people will be parted from their
+    #' partners if this is not applied.
+    resident_children <-
+      resident_children[!resident_children %in% matches[, c(id_A, id_B)]]
 
     # now get moving!
     Pop$leave_household(ind_ids = matches[move_out_decision_flag, ][["id_A"]])
