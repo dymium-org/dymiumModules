@@ -36,9 +36,9 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   lg$info('Running Separation')
 
   # get object references for cleaner code
-  Pop <- assign_reference(world, Population)
-  Ind <- assign_reference(world, Individual)
-  Hh <- assign_reference(world, Household)
+  Pop <- world$get("Population")
+  Ind <- world$get("Individual")
+  Hh <- world$get("Household")
 
   # check model
   if (is.null(model)) {
@@ -111,7 +111,7 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
       event = constants$EVENT$SEPARATION
     )
 
-    # 1) determine child custody - for those partners who have kids
+    # 1) determine child custody - for those partners who have kids  ---------
     custody_to_partner_x <-
       TransitionChildCustody$new(
         x = Ind,
@@ -125,7 +125,7 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
     movers <-
       c(separating_couples_list$partner_x[!custody_to_partner_x], separating_couples_list$partner_y[custody_to_partner_x])
 
-    # 2) remove relationship
+    # 2) remove relationship -----------
     # 2.1) husband and wife remove each other from partner_id
     # note that `remove_relationship` removes the partner_id fields of both of the
     # partners
@@ -133,50 +133,70 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
     # 2.2) movers remove self from household
     Pop$leave_household(ind_ids = movers)
 
-    # 3) movers join new households
-    # TODO: add different types of join (group household, return home, lone household)
-    # create new emptied households
-    non_family_hh_decision <- TransitionGroupHousehold$new(
+    # 3) movers join new households ------------
+    TransHhType <- TransitionGroupHousehold$new(
       x = Ind,
       model = model$separate_hhtype, # choicelist
       targeted_agents = movers)
-    lone_movers <-
-      non_family_hh_decision$get_decision_maker_ids(response_filter = "lone")
-    group_movers <-
-      non_family_hh_decision$get_decision_maker_ids(response_filter = "group")
-
-    if (length(lone_movers) != 0) {
-      lone_movers_dt <-
-        data.table::data.table(
-          ind_id = lone_movers,
-          hh_id = NA_integer_
-        )
-      household_formation(Pop = Pop, mapping = lone_movers_dt, type = "new")
-      add_history(
-        entity = Pop$get("Individual"),
-        ids = lone_movers,
-        event = constants$EVENT$CREATE_NEW_HOUSEHOLD
-      )
+    
+    lone_mover_ids <-
+      TransHhType$get_result()[response == "lone", id]
+    group_mover_ids <-
+      TransHhType$get_result()[response == "group", id]
+    
+    # Lone movers
+    if (length(lone_mover_ids) > 0) {
+      # create new emptied households
+      Hh$add(n = length(lone_mover_ids))
+      # get the new emptied households' ids
+      new_hids <- Hh$get_new_agent_ids()
+      # add to history
+      add_history(entity = Ind,
+                  ids = lone_mover_ids,
+                  event = constants$EVENT$CREATE_NEW_HOUSEHOLD)
+      # leavers join their new lone person households
+      Pop$join_household(ind_ids = lone_mover_ids, hh_ids = new_hids)
     }
-
-    if (length(group_movers) != 0) {
-      group_movers_dt <-
-        data.table::data.table(
-          ind_id = group_movers,
-          hh_id = NA_integer_
-        )
-      household_formation(Pop = Pop,
-                          model$separate_hf_random_join,
-                          mapping = group_movers_dt,
-                          type = "randomjoin")
-      add_history(
-        entity = Pop$get("Individual"),
-        ids = group_movers,
-        event = constants$EVENT$JOINED_EXISTING_HOUSEHOLD
-      )
+    
+    # Group movers
+    if (length(group_mover_ids) > 0) {
+      group_leavers_hhsize_pref <-
+        sample(names(model$separate_hf_random_join),
+               length(group_mover_ids),
+               replace = TRUE,
+               prob = model$separate_hf_random_join) %>%
+        as.integer()
+      
+      # make sure that hhsize is up-to-date.
+      Pop$update_hhsize()
+      # create place holders and information vectors
+      hids <- Hh$get_ids()
+      hhsize <- Hh$get_attr(x = "hhsize")
+      hids_to_join <- vector(mode = "integer", length = length(group_mover_ids))
+      
+      # simulate household selection
+      for (.group_mover_idx in seq_along(group_mover_ids)) {
+        # get the hhsize pref of the current chooser
+        .hhsize_pref <- group_leavers_hhsize_pref[.group_mover_idx]
+        # draw one of the households with size equals to the prefered size
+        .hid_to_join <- sample(x = hids[which(hhsize == .hhsize_pref)], size = 1)
+        # store the chosen household id
+        hids_to_join[.group_mover_idx] <- .hid_to_join
+        # increase the size of the chosen household by one
+        hhsize[which(hids_to_join[.group_mover_idx] == .hid_to_join)] <- .hhsize_pref + 1L
+      }
+      
+      # add to history
+      add_history(entity = Ind,
+                  ids = group_mover_ids,
+                  event = constants$EVENT$JOINED_EXISTING_HOUSEHOLD)
+      
+      # group leavers join their chosen households
+      Pop$join_household(ind_ids = group_mover_ids, hh_ids = hids_to_join)
     }
+    
   }
-
+  
   invisible(world)
 }
 

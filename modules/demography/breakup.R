@@ -36,8 +36,9 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
 
   lg$info('Running Breakup')
 
-  Pop <- assign_reference(world, Population)
-  Ind <- assign_reference(world, Individual)
+  Pop <- world$get("Population")
+  Hh <- world$get("Household")
+  Ind <- world$get("Individual")
 
   # check model
   model <- pick_models(model, world, REQUIRED_MODELS)
@@ -141,48 +142,70 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
 
     # movers decide to join an existing household or create a new lone person
     # household
-    non_family_hh_decision <- TransitionGroupHousehold$new(
+    TransHhtype <- TransitionGroupHousehold$new(
       x = Ind,
       model = model$breakup_hhtype,
       targeted_agents = movers
     )
-    lone_movers <-
-      non_family_hh_decision$get_decision_maker_ids("lone")
-    group_movers <-
-      non_family_hh_decision$get_decision_maker_ids("group")
-
-    if (length(lone_movers) != 0) {
-      lone_movers_dt <-
-        data.table::data.table(
-          ind_id = lone_movers,
-          hh_id = NA_integer_
-        )
-      household_formation(Pop, mapping = lone_movers_dt, type = "new")
-      add_history(
-        entity = Ind,
-        ids = lone_movers,
-        event = constants$EVENT$CREATE_NEW_HOUSEHOLD
-      )
+    
+    lone_mover_ids <-
+      TransHhtype$get_decision_maker_ids("lone")
+    group_mover_ids <-
+      TransHhtype$get_decision_maker_ids("group")
+    
+    # Lone movers --------------
+    if (length(lone_mover_ids) > 0) {
+      # create new emptied households
+      Hh$add(n = length(lone_mover_ids))
+      # get the new emptied households' ids
+      new_hids <- Hh$get_new_agent_ids()
+      # add to history
+      add_history(entity = Ind,
+                  ids = lone_mover_ids,
+                  event = constants$EVENT$CREATE_NEW_HOUSEHOLD)
+      # leavers join their new lone person households
+      Pop$join_household(ind_ids = lone_mover_ids, hh_ids = new_hids)
     }
-
-    if (length(group_movers) != 0) {
-      group_movers_dt <-
-        data.table::data.table(
-          ind_id = group_movers,
-          hh_id = NA_integer_
-        )
-      household_formation(Pop,
-                          model$breakup_hf_random_join,
-                          mapping = group_movers_dt,
-                          type = "randomjoin")
-      add_history(
-        entity = Ind,
-        ids = group_movers,
-        event = constants$EVENT$JOINED_EXISTING_HOUSEHOLD
-      )
+    
+    # Group movers --------------
+    if (length(group_mover_ids) > 0) {
+      group_leavers_hhsize_pref <-
+        sample(x = names(model$breakup_hf_random_join),
+               size = length(group_mover_ids),
+               replace = TRUE,
+               prob = model$breakup_hf_random_join) %>%
+        as.integer()
+      
+      # make sure that hhsize is up-to-date.
+      Pop$update_hhsize()
+      
+      # store frequently accesss variables and create a placeholder variable
+      hids <- Hh$get_ids()
+      hhsize <- Hh$get_attr(x = "hhsize")
+      hids_to_join <- vector(mode = "integer", length = length(group_mover_ids))
+      
+      # simulate household selection
+      for (.group_mover_idx in seq_along(group_mover_ids)) {
+        # get the hhsize pref of the current chooser
+        .hhsize_pref <- group_leavers_hhsize_pref[.group_mover_idx]
+        # draw one of the households with size equals to the prefered size
+        .hid_to_join <- sample(x = hids[which(hhsize == .hhsize_pref)], size = 1)
+        # store the chosen household id
+        hids_to_join[.group_mover_idx] <- .hid_to_join
+        # increase the size of the chosen household by one
+        hhsize[which(hids_to_join[.group_mover_idx] == .hid_to_join)] <- .hhsize_pref + 1L
+      }
+      
+      # add to history
+      add_history(entity = Ind,
+                  ids = group_mover_ids,
+                  event = constants$EVENT$JOINED_EXISTING_HOUSEHOLD)
+      
+      # group leavers join their chosen households
+      Pop$join_household(ind_ids = group_mover_ids, hh_ids = hids_to_join)
     }
   }
-
+  
   # return the first argument (`object`) to make event functions pipe-able.
   invisible(world)
 }
