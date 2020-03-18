@@ -139,10 +139,11 @@ become_divorced <- function(Pop, ids) {
     Ind$get_data(copy = FALSE) %>%
       .[get(id_col) %in% partner_ids &  marital_status == constants$IND$MARITAL_STATUS$SEPARATED,
         marital_status := constants$IND$MARITAL_STATUS$DIVORCED]
-
-    add_history(entity = Ind,
-                ids = partner_ids,
-                event = constants$EVENT$DIVORCE)
+    if (length(partner_ids) != 0) {
+      add_history(entity = Ind,
+                  ids = partner_ids,
+                  event = constants$EVENT$DIVORCE)  
+    }
   }
 
   return(invisible())

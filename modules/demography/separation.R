@@ -47,17 +47,22 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
     checkmate::assert_names(names(model), type = "unique", identical.to = REQUIRED_MODELS)
   }
 
-  # male initiated event
+  # note that this is a male initiated event
   TransSeparate <- TransitionSeparate$new(
     x = Ind,
     model = model$separate_male,
     target = target
   )
-
-  separator_ids <- TransSeparate$get_decision_maker_ids('yes')
-  partner_ids <- Pop$ind$get_data(ids = separator_ids)[, (partner_id)]
-  stopifnot(length(separator_ids) == length(partner_ids))
-  separating_couples_list <- list(partner_x = separator_ids, partner_y = partner_ids)
+  
+  # form a list of separators and their partners
+  if (TransSeparate$get_result()[response == 'yes', .N] != 0) {
+    separator_ids <- TransSeparate$get_result()[response == 'yes', id]
+    partner_ids <- Pop$ind$get_data(ids = separator_ids)[, (partner_id)]
+    stopifnot(length(separator_ids) == length(partner_ids))
+    separating_couples_list <- list(partner_x = separator_ids, partner_y = partner_ids)  
+  } else {
+    separating_couples_list <- list(partner_x = integer(0), partner_y = integer(0))  
+  }
 
   # if both partners in a same-sex relationship undergo TransitionBreakup and
   # they both decide to breakup both of their ids will be in `breakingup_persons`
@@ -82,7 +87,7 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
 
   Pop$log(
     desc = "cnt:separations",
-    value = length(separator_ids)
+    value = length(separating_couples_list$rator_ids)
   )
   Pop$log(
     desc = "avl:separations",
@@ -99,15 +104,19 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   # apply side-effects
   if (length(separating_couples_list$partner_x) > 0) {
 
-    # change marital status
-    .util_become_separated(Pop = Pop, ids = c(separating_couples_list$partner_x, separating_couples_list$partner_y))
-
+    if (!all(Ind$get_attr("marital_status", unlist(separating_couples_list)) == 
+             constants$IND$MARITAL_STATUS$MARRIED)) {
+      lg$warn("Not all separating individuals are married!")
+    }
+    
+    # update marital status to 'separated'
+    Ind$get_data(copy = FALSE) %>%
+      .[get(Ind$get_id_col()) %in% unlist(separating_couples_list),
+        `:=`(marital_status = constants$IND$MARITAL_STATUS$SEPARATED)]
+    
     add_history(
-      entity = Pop$get("Individual"),
-      ids = c(
-        separating_couples_list$partner_x,
-        separating_couples_list$partner_y
-      ),
+      entity = Ind,
+      ids = c(separating_couples_list$partner_x, separating_couples_list$partner_y),
       event = constants$EVENT$SEPARATION
     )
 
@@ -198,23 +207,6 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   }
   
   invisible(world)
-}
-
-# private utility functions (.util_*) -------------------------------------
-.util_become_separated = function(Pop, ids) {
-
-  Ind <- assign_reference(Pop, Individual)
-
-  if (!all(Ind$get_attr("marital_status", ids) == constants$IND$MARITAL_STATUS$MARRIED)) {
-    lg$warn("Not all separating individuals are married!")
-  }
-
-  # update marital status to 'separated'
-  Ind$get_data(copy = FALSE) %>%
-    .[get(Ind$get_id_col()) %in% ids,
-      `:=`(marital_status = constants$IND$MARITAL_STATUS$SEPARATED)]
-
-  invisible()
 }
 
 TransitionSeparate <- R6Class(

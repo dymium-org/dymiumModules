@@ -50,16 +50,18 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
     target = target
   )
 
-  breakingup_persons <-
-    list(
-      partner_x = TransBreakup$get_decision_maker_ids('yes'),
-      partner_y =
-        Ind$get_data(
-          ids = TransBreakup$get_decision_maker_ids('yes')
-        ) %>%
-        .[, (partner_id)]
-    )
-
+  # form a list of initiators and their partners
+  if (TransBreakup$get_result()[response == 'yes', .N] > 0) {
+    breakingup_persons <-
+      list(
+        partner_x = TransBreakup$get_result()[response == 'yes', id],
+        partner_y = Ind$get_data(ids = TransBreakup$get_result()[response == 'yes', id])[, (partner_id)]
+      )  
+    stopifnot(length(breakingup_persons$partner_x) == length(breakingup_persons$partner_y))
+  } else {
+    breakingup_persons <- list(partner_x = integer(0), partner_y = integer(0))  
+  }
+  
   # if both of persons in a same-sex relationship undergo TransitionBreakup and
   # they both decide to breakup both of their ids in be in breakingup_persons
   # in partner_x and partner_y which means there will be duplications of their ids
