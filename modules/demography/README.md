@@ -95,7 +95,7 @@ event_demography_age <- modules::use(here::here("modules/demography/age.R"))
 
 ``` r
 create_toy_world()
-#> [04:10:30] WARN  dymiumCore .subset2(public_bind_env, "initialize"): Creating a `hhsize` column in `hh_data` as it is not provided.
+#> [06:21:53] WARN  dymiumCore .subset2(public_bind_env, "initialize"): Creating a `hhsize` column in `hh_data` as it is not provided.
 
 event_demography_age <- modules::use(here::here("modules/demography/age.R"))
 
@@ -106,7 +106,7 @@ summary(world$entities$Individual$get_attr(x = "age"))
 
 world %>%
   event_demography_age$run(.)
-#> [04:10:30] INFO  demography event_demography_age$run: Running Age
+#> [06:21:53] INFO  demography event_demography_age$run: Running Age
 
 # summary of 'age' attribute after ageing 
 summary(world$entities$Individual$get_attr(x = "age"))
@@ -177,7 +177,7 @@ model <- list(fertility = list(yes = 0.05, no = 0.95),
 
 ``` r
 create_toy_world()
-#> [04:10:30] WARN  dymiumCore .subset2(public_bind_env, "initialize"): Creating a `hhsize` column in `hh_data` as it is not provided.
+#> [06:21:54] WARN  dymiumCore .subset2(public_bind_env, "initialize"): Creating a `hhsize` column in `hh_data` as it is not provided.
 
 event_demography_birth <- modules::use(here::here("modules/demography/birth.R"))
 
@@ -187,13 +187,13 @@ world$entities$Individual$n()
 
 world %>%
   event_demography_birth$run(., model = model)
-#> [04:10:31] INFO  demography event_demography_birth$run: Running Birth
+#> [06:21:54] INFO  demography event_demography_birth$run: Running Birth
 #> Loading required namespace: testthat
-#> [04:10:31] INFO  demography event_demography_birth$run: There are 8 births from 8 birth givers.
+#> [06:21:54] INFO  demography event_demography_birth$run: There are 5 births from 5 birth givers.
 
 # Total number of individuals after a run of the birth event
 world$entities$Individual$n()
-#> [1] 381
+#> [1] 378
 ```
 
 ## Death
@@ -249,7 +249,7 @@ that have been removed you through the death event use the
 
 ``` r
 create_toy_world()
-#> [04:10:31] WARN  dymiumCore .subset2(public_bind_env, "initialize"): Creating a `hhsize` column in `hh_data` as it is not provided.
+#> [06:21:54] WARN  dymiumCore .subset2(public_bind_env, "initialize"): Creating a `hhsize` column in `hh_data` as it is not provided.
 
 event_demography_death <- modules::use(here::here("modules/demography/death.R"))
 
@@ -266,19 +266,19 @@ table(world$entities$Individual$get_attr("marital_status"))
 
 world %>%
   event_demography_death$run(., model = model)
-#> [04:10:31] INFO  demography event_demography_death$run: Running Death
-#> [04:10:31] INFO  demography event_demography_death$run: There are 47 deaths
+#> [06:21:54] INFO  demography event_demography_death$run: Running Death
+#> [06:21:54] INFO  demography event_demography_death$run: There are 46 deaths
 
 # Total number of individuals after a run of the death event
 world$entities$Individual$n()
-#> [1] 326
+#> [1] 327
 # Distribution of marital status after a run of the death event
 table(world$entities$Individual$get_attr("marital_status"))
 #> 
 #>       divorced        married  never married not applicable      separated 
-#>             19            136             89             48              4 
+#>             16            136             96             45              5 
 #>        widowed 
-#>             30
+#>             29
 ```
 
 ## Marriage
@@ -375,7 +375,7 @@ model <- list(
 
 ``` r
 create_toy_world()
-#> [04:10:31] WARN  dymiumCore .subset2(public_bind_env, "initialize"): Creating a `hhsize` column in `hh_data` as it is not provided.
+#> [06:21:54] WARN  dymiumCore .subset2(public_bind_env, "initialize"): Creating a `hhsize` column in `hh_data` as it is not provided.
 
 event_demography_marriage <- modules::use(here::here("modules/demography/marriage.R"))
 
@@ -389,15 +389,15 @@ table(world$entities$Individual$get_attr("marital_status"))
 
 world %>%
   event_demography_marriage$run(., model = model)
-#> [04:10:31] INFO  demography event_demography_marriage$run: Running Marriage
-#> [04:10:32] INFO  demography event_demography_marriage$run: 7 males and 6 are entering the marriage market (ratio=1.17:1).
-#> [04:10:32] INFO  demography event_demography_marriage$run: There were 6 marriages occured (priorly cohabited: 0, did not cohabit: 6)
+#> [06:21:54] INFO  demography event_demography_marriage$run: Running Marriage
+#> [06:21:55] INFO  demography event_demography_marriage$run: 5 males and 4 are entering the marriage market (ratio=1.25:1).
+#> [06:21:55] INFO  demography event_demography_marriage$run: There were 5 marriages occured (priorly cohabited: 1, did not cohabited: 4)
 
 # Distribution of marital status before a run of the marriage event
 table(world$entities$Individual$get_attr("marital_status"))
 #> 
 #>       divorced        married  never married not applicable      separated 
-#>             21            186             97             53              6 
+#>             22            184             98             53              6 
 #>        widowed 
 #>             10
 ```
@@ -457,7 +457,7 @@ model <-
 
 ``` r
 create_toy_world()
-#> [04:10:32] WARN  dymiumCore .subset2(public_bind_env, "initialize"): Creating a `hhsize` column in `hh_data` as it is not provided.
+#> [06:21:55] WARN  dymiumCore .subset2(public_bind_env, "initialize"): Creating a `hhsize` column in `hh_data` as it is not provided.
 
 event_demography_separation <- modules::use(here::here("modules/demography/separation.R"))
 
@@ -471,14 +471,14 @@ table(world$entities$Individual$get_attr("marital_status"))
 
 world %>%
   event_demography_separation$run(., model = model)
-#> [04:10:32] INFO  demography event_demography_separation$run: Running Separation
-#> [04:10:32] INFO  demography event_demography_separation$run: #seperating couples: 9
+#> [06:21:55] INFO  demography event_demography_separation$run: Running Separation
+#> [06:21:55] INFO  demography event_demography_separation$run: #seperating couples: 5
 
 # Distribution of marital status before a run of the marriage event
 table(world$entities$Individual$get_attr("marital_status"))
 #> 
 #>       divorced        married  never married not applicable      separated 
-#>             22            156            108             53             24 
+#>             22            164            108             53             16 
 #>        widowed 
 #>             10
 ```
@@ -530,7 +530,7 @@ model <- list(
 
 ``` r
 create_toy_world()
-#> [04:10:32] WARN  dymiumCore .subset2(public_bind_env, "initialize"): Creating a `hhsize` column in `hh_data` as it is not provided.
+#> [06:21:56] WARN  dymiumCore .subset2(public_bind_env, "initialize"): Creating a `hhsize` column in `hh_data` as it is not provided.
 
 event_demography_divorce <- modules::use(here::here("modules/demography/divorce.R"))
 
@@ -544,14 +544,14 @@ table(world$entities$Individual$get_attr("marital_status"))
 
 world %>%
   event_demography_divorce$run(., model = model)
-#> [04:10:33] INFO  demography event_demography_divorce$run: Running Divorce
-#> [04:10:33] INFO  demography event_demography_divorce$run: #individuals to divorce: 0
+#> [06:21:56] INFO  demography event_demography_divorce$run: Running Divorce
+#> [06:21:56] INFO  demography event_demography_divorce$run: #individuals to divorce: 2
 
 # Distribution of marital status before a run of the marriage event
 table(world$entities$Individual$get_attr("marital_status"))
 #> 
 #>       divorced        married  never married not applicable      separated 
-#>             22            174            108             53              6 
+#>             24            174            108             53              4 
 #>        widowed 
 #>             10
 ```
@@ -602,42 +602,27 @@ model <- list(
 
 ``` r
 create_toy_world()
-#> [04:10:33] WARN  dymiumCore .subset2(public_bind_env, "initialize"): Creating a `hhsize` column in `hh_data` as it is not provided.
+#> [06:21:56] WARN  dymiumCore .subset2(public_bind_env, "initialize"): Creating a `hhsize` column in `hh_data` as it is not provided.
 
 event_demography_cohabit <- modules::use(here::here("modules/demography/cohabit.R"))
 
-# Distribution of marital status before a run of the marriage event
-table(world$entities$Individual$get_attr("marital_status"))
+# people with partner before the cohabitation event
+table(!is.na(world$entities$Individual$get_attr("partner_id")))
 #> 
-#>       divorced        married  never married not applicable      separated 
-#>             22            174            108             53              6 
-#>        widowed 
-#>             10
+#> FALSE  TRUE 
+#>   177   196
 
 world %>%
   event_demography_cohabit$run(., model = model)
-#> [04:10:33] INFO  demography event_demography_cohabit$run: Running Cohabit2
-#> [04:10:33] INFO  demography event_demography_cohabit$run: 9 males and 3 females enter the cohabitation market (ratio = 3:1).
-#> Warning in as.data.table.list(x, keep.rownames = keep.rownames, check.names =
-#> check.names, : Item 4 has 0 rows but longest item has 1; filled with NA
+#> [06:21:56] INFO  demography event_demography_cohabit$run: Running Cohabit
+#> [06:21:56] INFO  demography event_demography_cohabit$run: 3 males and 5 females enter the cohabitation market (ratio = 0.6:1).
+#> [06:21:56] INFO  demography event_demography_cohabit$run: 3 newly cohabited couples were formed.
 
-#> Warning in as.data.table.list(x, keep.rownames = keep.rownames, check.names =
-#> check.names, : Item 4 has 0 rows but longest item has 1; filled with NA
-
-#> Warning in as.data.table.list(x, keep.rownames = keep.rownames, check.names =
-#> check.names, : Item 4 has 0 rows but longest item has 1; filled with NA
-
-#> Warning in as.data.table.list(x, keep.rownames = keep.rownames, check.names =
-#> check.names, : Item 4 has 0 rows but longest item has 1; filled with NA
-#> [04:10:33] INFO  demography event_demography_cohabit$run: 3 newly cohabited couples were formed.
-
-# Distribution of marital status before a run of the marriage event
-table(world$entities$Individual$get_attr("marital_status"))
+# people with partner after running the cohabitation event
+table(!is.na(world$entities$Individual$get_attr("partner_id")))
 #> 
-#>       divorced        married  never married not applicable      separated 
-#>             22            174            108             53              6 
-#>        widowed 
-#>             10
+#> FALSE  TRUE 
+#>   171   202
 ```
 
 ## Breakup
@@ -684,7 +669,7 @@ model <-
 
 ``` r
 create_toy_world()
-#> [04:10:33] WARN  dymiumCore .subset2(public_bind_env, "initialize"): Creating a `hhsize` column in `hh_data` as it is not provided.
+#> [06:21:57] WARN  dymiumCore .subset2(public_bind_env, "initialize"): Creating a `hhsize` column in `hh_data` as it is not provided.
 
 event_demography_breakup <- modules::use(here::here("modules/demography/breakup.R"))
 
@@ -696,9 +681,8 @@ table(is.na(world$entities$Individual$get_attr("partner_id")))
 
 world %>%
   event_demography_breakup$run(., model = model)
-#> [04:10:34] INFO  demography event_demography_breakup$run: Running Breakup
-#> Warning in max(rows): no non-missing arguments to max; returning -Inf
-#> [04:10:34] INFO  demography event_demography_breakup$run: There is 0 couple who broke up
+#> [06:21:57] INFO  demography event_demography_breakup$run: Running Breakup
+#> [06:21:57] INFO  demography event_demography_breakup$run: There is 0 couple who broke up
 
 # Total number of individuals with partner after
 table(is.na(world$entities$Individual$get_attr("partner_id")))
@@ -768,7 +752,7 @@ model <- list(leavehome_male = list(yes = 0.3, no = 0.7),
 
 ``` r
 create_toy_world()
-#> [04:10:34] WARN  dymiumCore .subset2(public_bind_env, "initialize"): Creating a `hhsize` column in `hh_data` as it is not provided.
+#> [06:21:57] WARN  dymiumCore .subset2(public_bind_env, "initialize"): Creating a `hhsize` column in `hh_data` as it is not provided.
 
 event_demography_leavehome <- modules::use(here::here("modules/demography/leavehome.R"))
 
@@ -778,12 +762,12 @@ world$entities$Household$n()
 
 world %>%
   event_demography_leavehome$run(., model = model)
-#> [04:10:34] INFO  demography event_demography_leavehome$run: Running Leavehome
-#> [04:10:34] INFO  demography event_demography_leavehome$run: There are 12 individuals leaving their parental homes.
+#> [06:21:57] INFO  demography event_demography_leavehome$run: Running Leavehome
+#> [06:21:57] INFO  demography event_demography_leavehome$run: There are 10 individuals leaving their parental homes.
 
 # Total number of households after
 world$entities$Household$n()
-#> [1] 145
+#> [1] 149
 ```
 
 ## Migration
@@ -849,7 +833,7 @@ target = 100
 
 ``` r
 create_toy_world()
-#> [04:10:34] WARN  dymiumCore .subset2(public_bind_env, "initialize"): Creating a `hhsize` column in `hh_data` as it is not provided.
+#> [06:21:58] WARN  dymiumCore .subset2(public_bind_env, "initialize"): Creating a `hhsize` column in `hh_data` as it is not provided.
 
 event_demography_migration <- modules::use(here::here("modules/demography/migration.R"))
 
@@ -861,16 +845,16 @@ world$entities$Individual$n()
 
 world %>%
   event_demography_migration$run(., model = model, target = target)
-#> [04:10:34] INFO  demography event_demography_migration$run: Running Migration
-#> [04:10:34] INFO  demography event_demography_migration$run: 100 migrant households are joining to the population.
-#> [04:10:35] INFO  demography event_demography_migration$run: There are 100 migrant households which made up of 265 individuals (avg. hhsize = 2.65)
-#> [04:10:35] WARN  dymiumCore Pop$add_population: Creating `hhsize` as it is not provided with `hh_data`.
+#> [06:21:58] INFO  demography event_demography_migration$run: Running Migration
+#> [06:21:58] INFO  demography event_demography_migration$run: 100 migrant households are joining to the population.
+#> [06:21:58] INFO  demography event_demography_migration$run: There are 100 migrant households which made up of 266 individuals (avg. hhsize = 2.66)
+#> [06:21:58] WARN  dymiumCore Pop$add_population: Creating `hhsize` as it is not provided with `hh_data`.
 
 # Total number of households and individuals after
 world$entities$Household$n()
 #> [1] 244
 world$entities$Individual$n()
-#> [1] 638
+#> [1] 639
 ```
 
 # Known issues

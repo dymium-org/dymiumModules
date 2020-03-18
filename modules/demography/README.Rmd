@@ -442,14 +442,14 @@ create_toy_world()
 
 event_demography_cohabit <- modules::use(here::here("modules/demography/cohabit.R"))
 
-# Distribution of marital status before a run of the marriage event
-table(world$entities$Individual$get_attr("marital_status"))
+# people with partner before the cohabitation event
+table(!is.na(world$entities$Individual$get_attr("partner_id")))
 
 world %>%
   event_demography_cohabit$run(., model = model)
 
-# Distribution of marital status before a run of the marriage event
-table(world$entities$Individual$get_attr("marital_status"))
+# people with partner after running the cohabitation event
+table(!is.na(world$entities$Individual$get_attr("partner_id")))
 ```
 
 ## Breakup
