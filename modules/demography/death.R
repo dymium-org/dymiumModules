@@ -38,42 +38,30 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   model <- pick_models(model, world, REQUIRED_MODELS)
 
   # the start of death event --------
-  # ids of dying persons
-  dying_persons <-
-    find_dying_persons(Pop = Pop,
-                             model = model$death,
-                             target = target)
-
-  n_deaths <- length(dying_persons)
-
+  TransitionDeath <- TransitionClassification$new(x = Ind, model = model$death, target = target)
+  Pop$log(desc = "avl:deaths", value = TransitionDeath$get_nrow_result())
+  dying_person_ids <- TransitionDeath$get_result()[response == 'yes', id]
+  n_deaths <- length(dying_person_ids)
   lg$info('There are {n_deaths} deaths')
   Pop$log(desc = "cnt:deaths", value = n_deaths)
 
   if (n_deaths > 0) {
-    Pop$log(desc = "id:individuals_died", value = list(dying_persons))
+    Pop$log(desc = "id:individuals_died", value = dying_person_ids)
+    
     # some individual agents may not have a partner hence NAs will be returned
     # but this will be ignore by the become_widowed() function.
-    partner_ids <- Ind$get_attr(x = "partner_id", ids = dying_persons)
+    partner_ids <- Ind$get_attr(x = "partner_id", ids = dying_person_ids)
     if (length(partner_ids) > 0) {
       become_widowed(Ind, ids = partner_ids)
     }
-    die(Ind, ids = dying_persons)
+
+    # remove dying persons
+    Ind$remove(ids = dying_person_ids)
+    add_history(entity = Ind, ids = dying_person_ids, event = constants$EVENT$DEATH)
     Pop$update()
+    
   }
   invisible(world)
-}
-
-# private utility functions (.util_*) -------------------------------------
-find_dying_persons = function(Pop, model, target) {
-
-  Ind <- assign_reference(Pop, Individual)
-
-  deathDecision <- TransitionDeath$new(x = Ind, model = model, target = target)
-
-  Pop$log(desc = "avl:deaths", value = deathDecision$get_nrow_result())
-
-  return(deathDecision$get_decision_maker_ids('yes'))
-
 }
 
 become_widowed = function(Ind, ids) {
@@ -93,26 +81,3 @@ become_widowed = function(Ind, ids) {
 
   invisible()
 }
-
-die = function(Ind, ids) {
-  Ind$remove(ids = ids)
-  add_history(entity = Ind,
-              ids = ids,
-              event = constants$EVENT$DEATH)
-  invisible()
-}
-
-TransitionDeath <- R6Class(
-  classname = "TransitionDeath",
-  inherit = TransitionClassification,
-  public = list(
-    mutate = function(.data) {
-      .data %>%
-        .[age >= 100, age := 99]
-    }
-  )
-)
-
-# exported utility functions (util_*) -------------------------------------
-util_function <- function(x) {}
-
