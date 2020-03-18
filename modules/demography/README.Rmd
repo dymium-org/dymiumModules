@@ -47,7 +47,7 @@ R packages: dymiumCore, data.table, modules, here, checkmate, R6.
 
 ### Description
 
-Increase age of all `Individual` agents by 1, which is equipvalent to one year. 
+Increase age of all `Individual` agents by 1, which is equivalent to one year. 
 
 <details>
 
@@ -159,10 +159,10 @@ world$entities$Individual$n()
 ### Usage 
 
 ```{r}
-event_demography_birth <- modules::use(here::here("modules/demography/birth.R"))
+event_demography_death <- modules::use(here::here("modules/demography/death.R"))
 ```
 ```{r}
-event_demography_birth
+event_demography_death
 ```
 
 
