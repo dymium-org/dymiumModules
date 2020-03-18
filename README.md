@@ -12,8 +12,8 @@ status](https://ci.appveyor.com/api/projects/status/github/dymium-org/dymiumModu
 <!-- badges: end -->
 
 A repository for sharing modules developed with dymiumCore. To share
-your module in this repository please send in your module as a pull
-request.
+your module, please clone this repository and send in your module as a
+pull request which should live under the `modules` folder.
 
 # Module directory
 
@@ -24,6 +24,30 @@ request.
     an agent-based traffic simulator.
   - [test](https://github.com/dymium-org/dymiumModules/tree/master/modules/test):
     regression testing for dymiumCore.
+
+# Installation
+
+This repository also hosts an R package, `dymiumModules`, that contains
+helper functions for module creation and download. It is currently not
+on CRAN. To install the package from this GitHub repository please use
+`remotes` or `devtools`.
+
+``` r
+remotes::install_github("dymium-org/dymiumModules")
+```
+
+# Main functions
+
+  - `use_module(name)`: create a new module folder at the root of your
+    currently active project folder.
+  - `use_module_readme(name)`: create a readme file from the standard
+    module readme template (see `inst/templates/module-README.rmd`)
+    which serves as the documentation of your module’s event functions.
+  - `use_event(name, module with_comment)`: create an event script for
+    storing an event function under an existing module folder.
+  - `download_module(name, repo, version, force, remove_download,
+    .base_dir)`: download a dymium module from an online repository
+    (default to this repository).
 
 # Create a new module
 
