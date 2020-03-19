@@ -233,9 +233,10 @@ FilterAgent <- list(
     },
 
     can_leave_parentalhome = function(x) {
-      IndObj <- assign_reference(x, Individual)
-      pid_col <- IndObj$get_id_col()
-      get_individual_data(x) %>%
+      checkmate::assert_r6(x, classes = "Individual")
+      Ind <- x
+      pid_col <- Ind$get_id_col()
+      get_individual_data(Ind) %>%
         #' conditions - within the age range rule, have no partner, have at least
         #' one identifiable parent and has no children
         .[age %between% c(
@@ -244,11 +245,11 @@ FilterAgent <- list(
         ) &
           is.na(partner_id) &
           (!is.na(mother_id) | !is.na(father_id)) &
-          !IndObj$have_relationship(ids = get(IndObj$get_id_col()), type = "children")] %>%
+          !Ind$have_relationship(ids = get(Ind$get_id_col()), type = "children")] %>%
         #' only consider those living with parents
         #' lwm - living with mother, lmf - living with father
-        .[, lwm := IndObj$living_together(get(pid_col), mother_id)] %>%
-        .[, lwf := IndObj$living_together(get(pid_col), father_id)] %>%
+        .[, lwm := Ind$living_together(get(pid_col), mother_id)] %>%
+        .[, lwf := Ind$living_together(get(pid_col), father_id)] %>%
         .[any(lwm, lwf) == TRUE,] %>%
         .[, c("lwm", "lwf") := NULL]
     },
@@ -313,7 +314,12 @@ modules::export("get_individual_data")
 get_individual_data <- function(x) {
   if (is.data.frame(x))
     return(x)
-  assign_reference(x, Individual)$get_data()
+  if (checkmate::test_r6(x, classes = "Individual")) {
+    return(x$get_data())
+  }
+  if (checkmate::test_r6(x, classes = "Container")) {
+    return(x$get("Individual")$get_data())
+  }
 }
 
 get_child_age <- function(x, IndObj, resident_child = FALSE) {

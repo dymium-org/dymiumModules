@@ -8,6 +8,7 @@ modules::expose(here::here('modules/demography/logger.R')) # import lgr's logger
 modules::expose(here::here('modules/demography/transitions.R'))
 constants <- modules::use(here::here('modules/demography/constants.R'))
 helpers <- modules::use(here::here('modules/demography/helpers.R'))
+household_formation <- modules::use(here::here('modules/demography/household_formation.R'))
 
 modules::export('^run$|^REQUIRED_MODELS$') # default exported functions
 
@@ -36,8 +37,9 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
 
   lg$info('Running Breakup')
 
-  Pop <- assign_reference(world, Population)
-  Ind <- assign_reference(world, Individual)
+  Pop <- world$get("Population")
+  Hh <- world$get("Household")
+  Ind <- world$get("Individual")
 
   # check model
   model <- pick_models(model, world, REQUIRED_MODELS)
@@ -49,16 +51,18 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
     target = target
   )
 
-  breakingup_persons <-
-    list(
-      partner_x = TransBreakup$get_decision_maker_ids('yes'),
-      partner_y =
-        Ind$get_data(
-          ids = TransBreakup$get_decision_maker_ids('yes')
-        ) %>%
-        .[, (partner_id)]
-    )
-
+  # form a list of initiators and their partners
+  if (TransBreakup$get_result()[response == 'yes', .N] > 0) {
+    breakingup_persons <-
+      list(
+        partner_x = TransBreakup$get_result()[response == 'yes', id],
+        partner_y = Ind$get_data(ids = TransBreakup$get_result()[response == 'yes', id])[, (partner_id)]
+      )  
+    stopifnot(length(breakingup_persons$partner_x) == length(breakingup_persons$partner_y))
+  } else {
+    breakingup_persons <- list(partner_x = integer(0), partner_y = integer(0))  
+  }
+  
   # if both of persons in a same-sex relationship undergo TransitionBreakup and
   # they both decide to breakup both of their ids in be in breakingup_persons
   # in partner_x and partner_y which means there will be duplications of their ids
@@ -141,48 +145,33 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
 
     # movers decide to join an existing household or create a new lone person
     # household
-    non_family_hh_decision <- TransitionGroupHousehold$new(
+    TransHhtype <- TransitionGroupHousehold$new(
       x = Ind,
       model = model$breakup_hhtype,
       targeted_agents = movers
     )
-    lone_movers <-
-      non_family_hh_decision$get_decision_maker_ids("lone")
-    group_movers <-
-      non_family_hh_decision$get_decision_maker_ids("group")
-
-    if (length(lone_movers) != 0) {
-      lone_movers_dt <-
-        data.table::data.table(
-          ind_id = lone_movers,
-          hh_id = NA_integer_
-        )
-      household_formation(Pop, mapping = lone_movers_dt, type = "new")
-      add_history(
-        entity = Ind,
-        ids = lone_movers,
-        event = constants$EVENT$CREATE_NEW_HOUSEHOLD
-      )
+    
+    lone_mover_ids <-
+      TransHhtype$get_decision_maker_ids("lone")
+    group_mover_ids <-
+      TransHhtype$get_decision_maker_ids("group")
+    
+    # Lone movers --------------
+    if (length(lone_mover_ids) > 0) {
+      household_formation$join_new_lone_household(Pop, ids = lone_mover_ids)
     }
-
-    if (length(group_movers) != 0) {
-      group_movers_dt <-
-        data.table::data.table(
-          ind_id = group_movers,
-          hh_id = NA_integer_
-        )
-      household_formation(Pop,
-                          model$breakup_hf_random_join,
-                          mapping = group_movers_dt,
-                          type = "randomjoin")
-      add_history(
-        entity = Ind,
-        ids = group_movers,
-        event = constants$EVENT$JOINED_EXISTING_HOUSEHOLD
+    
+    # Group movers --------------
+    if (length(group_mover_ids) > 0) {
+      household_formation$random_join_group_household(
+        Pop = Pop,
+        ids = group_mover_ids,
+        model = model$breakup_hf_random_join
       )
     }
   }
-
+    
+  
   # return the first argument (`object`) to make event functions pipe-able.
   invisible(world)
 }

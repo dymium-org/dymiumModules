@@ -32,8 +32,8 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
 
   lg$info("Running Divorce")
 
-  Pop <- assign_reference(world, Population)
-  Ind <- assign_reference(world, Individual)
+  Pop <- world$get("Population")
+  Ind <- world$get("Individual")
 
   # check model
   if (is.null(model)) {
@@ -125,13 +125,13 @@ become_divorced <- function(Pop, ids) {
 
     cols <- c(id_col, ".past_partner_id")
 
-    self_rel <- ind_data[self_idx, .SD, .SDcol = cols] %>%
+    self_relationship <- ind_data[self_idx, .SD, .SDcol = cols] %>%
       setnames(old = cols, new = c("self", "partner"))
 
-    partner_rel <- ind_data[partner_idx, .SD, .SDcol = cols] %>%
+    partner_relationship <- ind_data[partner_idx, .SD, .SDcol = cols] %>%
       setnames(old = cols, new = c("partner", "self"))
 
-    partner_ids <- merge(partner_rel, self_rel, by = "self") %>%
+    partner_ids <- merge(partner_relationship, self_relationship, by = "self") %>%
       .[partner.x == partner.y, partner.x]
 
     # past partner also become divorced if his/her marital status is still 'separated'
@@ -139,10 +139,11 @@ become_divorced <- function(Pop, ids) {
     Ind$get_data(copy = FALSE) %>%
       .[get(id_col) %in% partner_ids &  marital_status == constants$IND$MARITAL_STATUS$SEPARATED,
         marital_status := constants$IND$MARITAL_STATUS$DIVORCED]
-
-    add_history(entity = Ind,
-                ids = partner_ids,
-                event = constants$EVENT$DIVORCE)
+    if (length(partner_ids) != 0) {
+      add_history(entity = Ind,
+                  ids = partner_ids,
+                  event = constants$EVENT$DIVORCE)  
+    }
   }
 
   return(invisible())

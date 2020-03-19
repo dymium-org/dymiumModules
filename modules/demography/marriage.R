@@ -57,31 +57,48 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
     desc = "cnt:marriages_from_cohabitation",
     value = length(cohabiting_male_to_marry_ids))
 
-  Pop$log(
-    desc = "avl:marriages_from_cohabitation",
-    value = TransMarriageCohabited$get_nrow_result())
-
   if (length(cohabiting_male_to_marry_ids) > 0) {
 
     cohabiting_female_to_marry_ids <-
       Ind$get_partner(ids = cohabiting_male_to_marry_ids)
+    cohabiting_person_to_marry_ids <-
+      c(cohabiting_male_to_marry_ids, cohabiting_female_to_marry_ids)
 
     # update marital status
     Ind$get_data(copy = FALSE) %>%
-      .[get(Ind$get_id_col()) %in% c(cohabiting_male_to_marry_ids,
-                                     cohabiting_female_to_marry_ids),
+      .[get(Ind$get_id_col()) %in% cohabiting_person_to_marry_ids,
         marital_status := constants$IND$MARITAL_STATUS$MARRIED]
 
+    #' Check to make sure that the duplicated ids come from same-sex cohabiting
+    #' individuals to get married.
+    if (length(unique(cohabiting_person_to_marry_ids)) !=
+        length(cohabiting_person_to_marry_ids)) {
+      tab <- table(cohabiting_person_to_marry_ids)
+      if (any(tab > 2)) {
+        stop("There are some ids that appear more than twice. Please debug or report this.")
+      }
+      potential_same_sex_ind_ids <- as.integer(names(tab[tab != 1]))
+      #' pssind = potential_same_sex_ind
+      pssind_sex <- Ind$get_attr("sex", ids = potential_same_sex_ind_ids)
+      pssind_partner_ids <- Ind$get_attr("partner_id", ids = potential_same_sex_ind_ids)
+      pssind_partner_sex <- Ind$get_attr("sex", ids = pssind_partner_ids)
+      if (all(pssind_sex != pssind_partner_sex)) {
+        stop("There are duplicated ids of opposite couples in the marriage from cohabitation process: ",
+             paste0(potential_same_sex_ind_ids, collapse = ", "))
+      } else {
+        cohabiting_person_to_marry_ids <- unique(cohabiting_person_to_marry_ids)
+      }
+    }
+
     checkmate::assert_integerish(
-      x = c(cohabiting_male_to_marry_ids, cohabiting_female_to_marry_ids),
-      len = length(cohabiting_male_to_marry_ids) * 2,
+      x = cohabiting_person_to_marry_ids,
       lower = 1,
       unique = T
     )
 
     add_history(
       entity = Ind,
-      ids = c(cohabiting_male_to_marry_ids, cohabiting_female_to_marry_ids),
+      ids = cohabiting_person_to_marry_ids,
       event = constants$EVENT$MARRIAGE_FROM_COHABITATION
     )
 
@@ -164,13 +181,16 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
       rowSums(na.rm = T) %>%
       {. == 0}
 
-    # create new households that are emptied (no members yet)
-    if (sum(move_out_decision_flag) != 0) {
-      Hh$add_new_agents(n = sum(move_out_decision_flag))
+    move_out_decision_flag <- rep(TRUE, length(move_out_decision_flag))
 
-      # assign new emptied household ids to those that are moving out
-      matches[move_out_decision_flag, hid := Hh$get_new_agent_ids()]
-    }
+    Ind$log(desc = "cnt:marriage-merged_household", value = sum(!move_out_decision_flag))
+    Ind$log(desc = "cnt:marriage-create_new_household", value = sum(move_out_decision_flag))
+
+    # create new households that are emptied (no members yet)
+    Hh$add(n = sum(move_out_decision_flag))
+
+    # assign new emptied household ids to those that are moving out
+    matches[move_out_decision_flag, hid := Hh$get_new_agent_ids()]
 
     # assign male household ids to those that are moving in
     matches[!move_out_decision_flag, hid := Ind$get_household_ids(id_A)]
@@ -181,11 +201,18 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
       id_B_resident_children = Ind$get_resident_children(id_B)
     )]
 
+    # assign new household ids for the children to move to with their parents
     resident_children <-
       rbind(matches[, .(hid, resident_children = id_A_resident_children)],
             matches[, .(hid, resident_children = id_B_resident_children)]) %>%
       .[, lapply(.SD, unlist), by = hid] %>%
       data.table:::na.omit.data.table()
+
+    #' remove resident children that are entering also cohabitation -----------
+    #' It is highly likely that newly cohabited people will be parted from their
+    #' partners if this is not applied.
+    resident_children <-
+      resident_children[!resident_children %in% matches[, c(id_A, id_B)]]
 
     # now get moving!
     Pop$leave_household(ind_ids = matches[move_out_decision_flag, ][["id_A"]])
@@ -194,13 +221,21 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
     Pop$leave_household(ind_ids = matches[["id_B"]])
     Pop$join_household(ind_ids = matches[["id_B"]],
                        hh_ids = matches[["hid"]])
-    Pop$leave_household(ind_ids = resident_children[["resident_children"]])
-    Pop$join_household(ind_ids = resident_children[["resident_children"]],
-                       hh_ids = resident_children[["hid"]])
+
+    if (nrow(resident_children) != 0) {
+      Pop$leave_household(ind_ids = resident_children[["resident_children"]])
+      Pop$join_household(ind_ids = resident_children[["resident_children"]],
+                         hh_ids = resident_children[["hid"]])
+    }
 
     add_history(entity = Pop$get("Individual"),
                 ids = matches[, c(id_A, id_B)],
                 event = constants$EVENT$MARRIAGE)
+
+    # record household size of the new households
+    Hh$get_data(ids = Hh$get_new_agent_ids()) %>%
+      .[, .(N = .N, hid = list(list(hid))), by = .(hhsize)] %>%
+      Hh$log(desc = "tab:hhsize_after_marriage_join", value = .)
 
     n_marriages_no_cohab <- nrow(matches)
 
@@ -211,7 +246,7 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   n_marriages <- n_marriage_cohab + n_marriages_no_cohab
   lg$info("There were {n_marriages} marriages occured \\
           (priorly cohabited: {n_marriage_cohab}, \\
-          did not cohabit: {n_marriages_no_cohab})")
+          did not cohabited: {n_marriages_no_cohab})")
   Pop$log(
     desc = "cnt:marriages",
     value = n_marriages)
@@ -220,7 +255,9 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
 }
 
 # private utility functions (.util_*) -------------------------------------
+allow_same_sex_partner <- function(Ind, ids) {
 
+}
 
 # Marriage Market classes -------------------------------------------------
 StochasticMarriageMarket <- R6::R6Class(

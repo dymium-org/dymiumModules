@@ -88,13 +88,12 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
 # private utility functions (.util_*) -------------------------------------
 create_newborns = function(Pop, ids, sex_ratios) {
 
-  Ind <- assign_reference(Pop, Individual)
+  Ind <- Pop$get("Individual")
 
-  partner_ids <-
-    Ind$get_attr(x = "partner_id", ids = ids)
+  partner_ids <- Ind$get_attr(x = "partner_id", ids = ids)
 
   if (!all(Ind$get_attr(x = "sex", ids = ids) == constants$IND$SEX$FEMALE)) {
-    stop("Birth event is only applicable for female individual agents.")
+    stop("Birth event is only applicable to female agents.")
   }
 
   # generate new ids
@@ -123,24 +122,22 @@ create_newborns = function(Pop, ids, sex_ratios) {
       # add parents to newborn
       father_id = partner_ids,
       mother_id = ids
-      #' default values - if your individual agents have more attributes than
-      #' the basic ones above then the default values for those attributes should
-      #' be defined here see the lines below for example
-      #' labour_force_status = "not applicable",
+      # default values - if your individual agents have more attributes than
+      # the basic ones above then the default values for those attributes should
+      # be defined here see the lines below for example
+      # labour_force_status = "not applicable",
       # student_status = "not attending",
       # industry_of_emp = "not applicable",
       # income = "not applicable",
       # education = "not applicable"
     )] %>%
-    #' binding the newborn data with an emptied individual data make sure that
-    #' newborn data have the same structure and types as the existing individual data
+    # binding the newborn data with an emptied individual data make sure that
+    # newborn data have the same structure and types as the existing individual data
     rbind(Ind$get_data()[0, ], ., fill = TRUE)
 
   # add newborns to the population
-  # note: Population$add_population() update some household attributes
-  #       such as household size hence you may not need to update the
-  #       same attributes twice.
-  Pop$add_population(ind_data = newborn_dt)
+  Ind$add(newborn_dt, check_existing = TRUE)
+  Pop$update_hhsize()
   invisible()
 }
 

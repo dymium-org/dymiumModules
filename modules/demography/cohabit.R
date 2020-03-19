@@ -33,7 +33,7 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
     return(invisible(world))
   }
 
-  lg$info('Running Cohabit2')
+  lg$info('Running Cohabit')
 
   # get references of the relavant entities in this event
   Pop <- world$get("Population")
@@ -113,14 +113,17 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
       rowSums(na.rm = T) %>%
       {. == 0}
 
+    move_out_decision_flag <- rep(TRUE, length(move_out_decision_flag))
+
+    Ind$log(desc = "cnt:cohabitation-merged_household", value = sum(!move_out_decision_flag))
+    Ind$log(desc = "cnt:cohabitation-create_new_household", value = sum(move_out_decision_flag))
+
     # create new households that are emptied (no members yet)
-    if (sum(move_out_decision_flag) != 0) {
-      Hh$add_new_agents(n = sum(move_out_decision_flag))  
-      
-      # assign new emptied household ids to those that are moving out
-      matches[move_out_decision_flag, hid := Hh$get_new_agent_ids()]
-    }
-    
+    Hh$add(n = sum(move_out_decision_flag))
+
+    # assign new emptied household ids to those that are moving out
+    matches[move_out_decision_flag, hid := Hh$get_new_agent_ids()]
+
     # assign male household ids to those that are moving in
     matches[!move_out_decision_flag, hid := Ind$get_household_ids(id_A)]
 
@@ -130,11 +133,18 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
       id_B_resident_children = Ind$get_resident_children(id_B)
     )]
 
+    # assign new household ids for the children to move to with their parents
     resident_children <-
       rbind(matches[, .(hid, resident_children = id_A_resident_children)],
             matches[, .(hid, resident_children = id_B_resident_children)]) %>%
       .[, lapply(.SD, unlist), by = hid] %>%
       data.table:::na.omit.data.table()
+
+    #' remove resident children that are entering also cohabitation -----------
+    #' It is highly likely that newly cohabited people will be parted from their
+    #' partners if this is not applied.
+    resident_children <-
+      resident_children[!resident_children %in% matches[, c(id_A, id_B)]]
 
     # now get moving!
     Pop$leave_household(ind_ids = matches[move_out_decision_flag, ][["id_A"]])
@@ -143,10 +153,20 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
     Pop$leave_household(ind_ids = matches[["id_B"]])
     Pop$join_household(ind_ids = matches[["id_B"]],
                        hh_ids = matches[["hid"]])
-    Pop$leave_household(ind_ids = resident_children[["resident_children"]])
-    Pop$join_household(ind_ids = resident_children[["resident_children"]],
-                       hh_ids = resident_children[["hid"]])
+
+    if (nrow(resident_children) != 0) {
+      Pop$leave_household(ind_ids = resident_children[["resident_children"]])
+      Pop$join_household(ind_ids = resident_children[["resident_children"]],
+                         hh_ids = resident_children[["hid"]])
+    }
+
     n_couples <- nrow(matches)
+
+    # record household size of the new households
+    Hh$get_data(ids = Hh$get_new_agent_ids()) %>%
+      .[, .(N = .N, hid = list(list(hid))), by = .(hhsize)] %>%
+      Hh$log(desc = "tab:hhsize_after_cohab_join", value = .)
+
   } else {
     n_couples <- 0
   }
@@ -187,6 +207,7 @@ TransitionCohabitationMale <- R6::R6Class(
     mutate = function(.data) {
       Ind <- private$.AgtObj
       .data %>%
+        # functions to add derive variables
         helpers$DeriveVar$IND$hhadult(x = ., Ind) %>%
         helpers$DeriveVar$IND$has_children(x = ., Ind) %>%
         helpers$DeriveVar$IND$has_resident_children(x = ., Ind) %>%
@@ -213,6 +234,7 @@ TransitionCohabitationFemale <- R6::R6Class(
     mutate = function(.data) {
       Ind <- private$.AgtObj
       .data %>%
+        # functions to add derive variables
         helpers$DeriveVar$IND$hhadult(x = ., Ind) %>%
         helpers$DeriveVar$IND$has_children(x = ., Ind) %>%
         helpers$DeriveVar$IND$has_resident_children(x = ., Ind) %>%

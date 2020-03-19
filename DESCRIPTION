@@ -15,13 +15,15 @@ Roxygen: list(markdown = TRUE)
 Suggests: 
     testthat (>= 2.1.0),
     covr,
-    rJava
+    rJava,
+    lgr (>= 0.3.0)
 RoxygenNote: 7.0.2
 Imports: 
     data.table (>= 1.12.8),
     magrittr,
-    dymiumCore (>= 0.1.0),
+    dymiumCore (>= 0.1.3),
     modules (>= 0.8.0),
-    here
+    here,
+    checkmate (>= 2.0.0)
 Remotes:
-  github::dymium-org/dymiumCore
+  github::dymium-org/dymiumCore@add-entities
