@@ -8,6 +8,7 @@ modules::expose(here::here('modules/demography/logger.R')) # import lgr's logger
 modules::expose(here::here('modules/demography/transitions.R'))
 constants <- modules::use(here::here('modules/demography/constants.R'))
 helpers <- modules::use(here::here('modules/demography/helpers.R'))
+household_formation <- modules::use(here::here('modules/demography/household_formation.R'))
 
 modules::export('^run$|^REQUIRED_MODELS$') # default exported functions
 
@@ -157,56 +158,19 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
     
     # Lone movers --------------
     if (length(lone_mover_ids) > 0) {
-      # create new emptied households
-      Hh$add(n = length(lone_mover_ids))
-      # get the new emptied households' ids
-      new_hids <- Hh$get_new_agent_ids()
-      # add to history
-      add_history(entity = Ind,
-                  ids = lone_mover_ids,
-                  event = constants$EVENT$CREATE_NEW_HOUSEHOLD)
-      # leavers join their new lone person households
-      Pop$join_household(ind_ids = lone_mover_ids, hh_ids = new_hids)
+      household_formation$join_new_lone_household(Pop, ids = lone_mover_ids)
     }
     
     # Group movers --------------
     if (length(group_mover_ids) > 0) {
-      group_leavers_hhsize_pref <-
-        sample(x = names(model$breakup_hf_random_join),
-               size = length(group_mover_ids),
-               replace = TRUE,
-               prob = model$breakup_hf_random_join) %>%
-        as.integer()
-      
-      # make sure that hhsize is up-to-date.
-      Pop$update_hhsize()
-      
-      # store frequently accesss variables and create a placeholder variable
-      hids <- Hh$get_ids()
-      hhsize <- Hh$get_attr(x = "hhsize")
-      hids_to_join <- vector(mode = "integer", length = length(group_mover_ids))
-      
-      # simulate household selection
-      for (.group_mover_idx in seq_along(group_mover_ids)) {
-        # get the hhsize pref of the current chooser
-        .hhsize_pref <- group_leavers_hhsize_pref[.group_mover_idx]
-        # draw one of the households with size equals to the prefered size
-        .hid_to_join <- sample(x = hids[which(hhsize == .hhsize_pref)], size = 1)
-        # store the chosen household id
-        hids_to_join[.group_mover_idx] <- .hid_to_join
-        # increase the size of the chosen household by one
-        hhsize[which(hids_to_join[.group_mover_idx] == .hid_to_join)] <- .hhsize_pref + 1L
-      }
-      
-      # add to history
-      add_history(entity = Ind,
-                  ids = group_mover_ids,
-                  event = constants$EVENT$JOINED_EXISTING_HOUSEHOLD)
-      
-      # group leavers join their chosen households
-      Pop$join_household(ind_ids = group_mover_ids, hh_ids = hids_to_join)
+      household_formation$random_join_group_household(
+        Pop = Pop,
+        ids = group_mover_ids,
+        model = model$breakup_hf_random_join
+      )
     }
   }
+    
   
   # return the first argument (`object`) to make event functions pipe-able.
   invisible(world)

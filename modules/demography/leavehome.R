@@ -9,6 +9,7 @@ modules::expose(here::here('modules/demography/logger.R')) # import lgr's logger
 modules::expose(here::here('modules/demography/transitions.R'))
 constants <- modules::use(here::here('modules/demography/constants.R'))
 helpers <- modules::use(here::here('modules/demography/helpers.R'))
+household_formation <- modules::use(here::here('modules/demography/household_formation.R'))
 
 modules::export('^run$|^REQUIRED_MODELS$') # default exported functions
 
@@ -51,37 +52,56 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
     helpers$FilterAgent$Ind$can_leave_parentalhome(Ind) %>%
     .[, .(id = list(list(get(Ind$get_id_col())))), by = sex]
   
-  TransLeaveHomeMales <-
-    TransitionLeaveHome$new(Ind,
-                            model = model$leavehome_male,
-                            targeted_agent = potential_leavers_dt[sex == constants$IND$SEX$MALE, 
-                                                                  unlist(id)])
+  # create a placeholder
+  leaver_ids <- c()
+  n_avl_male_leavers <- 0
+  n_avl_female_leavers <- 0
   
-  TransLeaveHomeFemales <-
-    TransitionLeaveHome$new(Ind,
-                            model = model$leavehome_male,
-                            targeted_agent = potential_leavers_dt[sex == constants$IND$SEX$FEMALE,
-                                                                  unlist(id)])
+  # these if statements are to make sure that 
+  # > potential_leavers_dt[sex == constants$IND$SEX$MALE, unlist(id)]
+  # won't return NULL and make Transition thinks that all agents are 
+  # to be considered, when no agents are eligible to leave parental home.
+  if (nrow(potential_leavers_dt[sex == constants$IND$SEX$MALE, ]) != 0) {
+    TransLeaveHomeMales <-
+      TransitionLeaveHome$new(Ind,
+                              model = model$leavehome_male,
+                              targeted_agent = potential_leavers_dt[sex == constants$IND$SEX$MALE,
+                                                                    unlist(id)])
+    leaver_ids <-
+      c(leaver_ids,
+        TransLeaveHomeMales$get_result()[response == "yes", id])
+    
+    n_avl_male_leavers <- TransLeaveHomeMales$get_nrow_result()
+  } 
   
-  leaver_ids <-
-    c(TransLeaveHomeFemales$get_result()[response == "yes", id],
-      TransLeaveHomeMales$get_result()[response == "yes", id])
+  if (nrow(potential_leavers_dt[sex == constants$IND$SEX$FEMALE, ]) != 0) {
+    TransLeaveHomeFemales <-
+      TransitionLeaveHome$new(Ind,
+                              model = model$leavehome_male,
+                              targeted_agent = potential_leavers_dt[sex == constants$IND$SEX$FEMALE,
+                                                                    unlist(id)])
+    leaver_ids <-
+      c(leaver_ids,
+        TransLeaveHomeFemales$get_result()[response == "yes", id])
+    
+    n_avl_female_leavers <- TransLeaveHomeFemales$get_nrow_result()
+  }
   
   number_of_leavers <- length(leaver_ids)
   
   Pop$log(
     desc = "avl:individuals_male_left_parental_homes",
-    value = TransLeaveHomeMales$get_nrow_result()
+    value = n_avl_male_leavers
   )
   
   Pop$log(
     desc = "avl:individuals_female_left_parental_homes",
-    value = TransLeaveHomeFemales$get_nrow_result()
+    value = n_avl_female_leavers
   )
   
   Pop$log(
-    desc = "avl:demography-left_home",
-    value = TransLeaveHomeFemales$get_nrow_result() + TransLeaveHomeMales$get_nrow_result()
+    desc = "avl:left_home",
+    value = n_avl_male_leavers + n_avl_female_leavers
   )
   
   Pop$log(
@@ -114,57 +134,17 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
     
     # lone household ------------
     if (length(lone_leaver_ids) > 0) {
-      # create new emptied households
-      Hh$add(n = length(lone_leaver_ids))
-      # get the new emptied households' ids
-      new_hids <- Hh$get_new_agent_ids()
-      # add to history
-      add_history(
-        entity = Ind,
-        ids = lone_leaver_ids,
-        event = constants$EVENT$CREATE_NEW_HOUSEHOLD
-      )
-      # leavers join their new lone person households
-      Pop$join_household(ind_ids = lone_leaver_ids, hh_ids = new_hids)
+      household_formation$join_new_lone_household(Pop, ids = lone_leaver_ids)
     }
     
     # group household ----------
     if (length(group_leaver_ids) > 0) {
-      group_leavers_hhsize_pref <-
-        sample(names(model$leavehome_hf_random_join),
-               length(group_leaver_ids),
-               replace = TRUE,
-               prob = model$leavehome_hf_random_join) %>%
-        as.integer()
-      
-      # make sure that hhsize is up-to-date.
-      Pop$update_hhsize()
-      # create place holders and information vectors
-      hids <- Hh$get_ids()
-      hhsize <- Hh$get_attr(x = "hhsize")
-      hids_to_join <- vector(mode = "integer", length = length(group_leaver_ids))
-      
-      # simulate household selection
-      for (.group_leaver_idx in seq_along(group_leaver_ids)) {
-        # get the hhsize pref of the current chooser
-        .hhsize_pref <- group_leavers_hhsize_pref[.group_leaver_idx]
-        # draw one of the households with size equals to the prefered size
-        .hid_to_join <- sample(x = hids[which(hhsize == .hhsize_pref)], size = 1)
-        # store the chosen household id
-        hids_to_join[.group_leaver_idx] <- .hid_to_join
-        # increase the size of the chosen household by one
-        hhsize[which(hids_to_join[.group_leaver_idx] == .hid_to_join)] <- .hhsize_pref + 1L
-      }
-      
-      # add to history
-      add_history(entity = Ind,
-                  ids = group_leaver_ids,
-                  event = constants$EVENT$JOINED_EXISTING_HOUSEHOLD)
-      
-      # group leavers join their chosen households
-      Pop$join_household(ind_ids = group_leaver_ids, hh_ids = hids_to_join)
+      household_formation$random_join_group_household(
+        Pop = Pop,
+        ids = group_leaver_ids,
+        model = model$leavehome_hf_random_join
+      )
     }
-    
   }
   
   invisible(world)
