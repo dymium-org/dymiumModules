@@ -1,8 +1,11 @@
 test_that("demography all events", {
 
+  testthat::skip_on_ci()
+  
+  lgr::threshold("error")
   # load demography event functions
-
-  demography <- modules::use(here::here("modules/demography"))
+  demography <- modules::use(file.path("..", "..", "modules", "demography"))
+  # demography <- modules::use(file.path("..", "..", "00_pkg_src", "dymiumModules", "modules", "demography"))
 
   # create world
   world <- World$new()
