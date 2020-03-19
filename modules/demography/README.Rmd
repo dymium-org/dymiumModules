@@ -25,6 +25,14 @@ Note that, there are hard-coded rules that can be modified, such as the age rang
 
 # Release note
 
+### version 0.1.3
+
+This version is only compatible with dymiumCore version 0.1.4.
+
+- Fixed various bugs in the module.
+- Refactored demographic event functions.
+- Fixed breaking changes from dymiumCore version 0.1.4 such as the removal of `household_formation` functions and new `Entity$add()`.
+
 ### version 0.1.2
 - Fixed the type of newborn's default age from numeric to integer.
 
