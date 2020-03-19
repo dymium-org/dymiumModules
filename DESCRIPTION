@@ -25,4 +25,4 @@ Imports:
     here,
     checkmate (>= 2.0.0)
 Remotes:
-  github::dymium-org/dymiumCore
+  github::dymium-org/dymiumCore@add-entities
