@@ -41,7 +41,7 @@ random_join_group_household <- function(Pop, ids, model) {
   hids <- Hh$get_ids()
   hhsize <- Hh$get_attr(x = "hhsize")
   hids_to_join <- vector(mode = "integer", length = length(ids))
-  browser()
+
   # simulate household selection
   for (.group_mover_idx in seq_along(ids)) {
     # get the hhsize pref of the current chooser
@@ -49,8 +49,8 @@ random_join_group_household <- function(Pop, ids, model) {
     # draw one of the households with size equals to the prefered size
     # Note that, if the preferred household size cannot be satisfied then the agent
     # randomly join one of the existing households
-    .potential_hids <- which(hhsize == .hhsize_pref)
-    if (length(potential_hids) != 0) {
+    .potential_hids <- hids[which(hhsize == .hhsize_pref)]
+    if (length(.potential_hids) != 0) {
       .hid_to_join <- dymiumCore::sample_choice(x = .potential_hids, size = 1L)
     } else {
       .hid_to_join <- dymiumCore::sample_choice(x = hids, size = 1)
