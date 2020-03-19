@@ -3,5 +3,4 @@
 export("%>%")
 import(data.table)
 import(dymiumCore)
-import(testthat)
 importFrom(magrittr,"%>%")
