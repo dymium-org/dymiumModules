@@ -23,7 +23,12 @@ leaving parental home), household dissolutions (separation, divorce, break up), 
 
 Note that, there are hard-coded rules that can be modified, such as the age range in which females can bare a child. See `constants.R`.
 
-# Release note
+# Release notes
+
+### version 1.0.0
+
+- Bumped up to version 1.0.0 to use the standard versionning (major.minor.patch) 
+- Fixed a wrong variable in a logging statement of the separation event. 
 
 ### version 0.1.3
 
