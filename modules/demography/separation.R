@@ -86,9 +86,11 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
       separating_couples_list$partner_y[!separating_couples_list$partner_y %in% dups_y]
   }
 
+  lg$info("#seperating couples: {length(separating_couples_list$partner_x)}")
+  
   Pop$log(
     desc = "cnt:separations",
-    value = length(separating_couples_list$rator_ids)
+    value = length(separating_couples_list$partner_x)
   )
   Pop$log(
     desc = "avl:separations",
@@ -98,9 +100,6 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
     desc = "id:individuals_separated",
     value = list(append(separating_couples_list$partner_x, separating_couples_list$partner_y))
   )
-
-  lg$info("#seperating couples: {.n_separating_couples}",
-          .n_separating_couples = length(separating_couples_list$partner_x))
 
   # apply side-effects
   if (length(separating_couples_list$partner_x) > 0) {
