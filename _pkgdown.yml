@@ -1,1 +1,7 @@
+url: https://modules.dymium.org
 destination: docs
+
+template:
+  params:
+    ganalytics: UA-158512288-1
+    bootswatch: readable
