@@ -5,3 +5,12 @@ template:
   params:
     ganalytics: UA-158512288-1
     bootswatch: readable
+
+navbar:
+  structure:
+      left:  [home, reference]
+      right: [github]
+  components:
+    home:
+      icon: fas fa-home fa-lg
+      href: index.html
