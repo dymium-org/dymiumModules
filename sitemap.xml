@@ -4,9 +4,36 @@
     <loc>https://modules.dymium.org/index.html</loc>
   </url>
   <url>
-    <loc>https://modules.dymium.org/reference/dymiumModules-package.html</loc>
+    <loc>https://modules.dymium.org/reference/check_module.html</loc>
+  </url>
+  <url>
+    <loc>https://modules.dymium.org/reference/check_module_version.html</loc>
+  </url>
+  <url>
+    <loc>https://modules.dymium.org/reference/download_module.html</loc>
+  </url>
+  <url>
+    <loc>https://modules.dymium.org/reference/get_all_module_files.html</loc>
+  </url>
+  <url>
+    <loc>https://modules.dymium.org/reference/get_module_files.html</loc>
+  </url>
+  <url>
+    <loc>https://modules.dymium.org/reference/get_module_versions.html</loc>
+  </url>
+  <url>
+    <loc>https://modules.dymium.org/reference/get_modules.html</loc>
   </url>
   <url>
     <loc>https://modules.dymium.org/reference/pipe.html</loc>
+  </url>
+  <url>
+    <loc>https://modules.dymium.org/reference/use_event.html</loc>
+  </url>
+  <url>
+    <loc>https://modules.dymium.org/reference/use_module.html</loc>
+  </url>
+  <url>
+    <loc>https://modules.dymium.org/reference/use_module_readme.html</loc>
   </url>
 </urlset>

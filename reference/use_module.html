@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Authors • dymiumModules</title>
+<title>Create a new module, using the recommended folder structure. — use_module • dymiumModules</title>
 
 
 <!-- jquery -->
@@ -18,8 +18,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
 
 <!-- bootstrap-toc -->
-<link rel="stylesheet" href="bootstrap-toc.css">
-<script src="bootstrap-toc.js"></script>
+<link rel="stylesheet" href="../bootstrap-toc.css">
+<script src="../bootstrap-toc.js"></script>
 
 <!-- Font Awesome icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous" />
@@ -33,13 +33,26 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
-<link href="pkgdown.css" rel="stylesheet">
-<script src="pkgdown.js"></script>
+<link href="../pkgdown.css" rel="stylesheet">
+<script src="../pkgdown.js"></script>
 
 
 
 
-<meta property="og:title" content="Authors" />
+<meta property="og:title" content="Create a new module, using the recommended folder structure. — use_module" />
+<meta property="og:description" content="This function creates a new module inside the 'modules' folder of your active R project.
+If the 'modules' folder doesn't exist it will create it then adds a new folder
+with the name as specified in the name argument inside the 'modules' folder.
+R scripts to be used across the module will be added which contain the following:
+a lgr logger script,
+a script that contains constant values, and
+a script for storing helper functions.
+
+
+Since dymium modules use the 'modules' and 'checkmate' packages, if these
+packages are not installed the function will ask whether you would like to
+install them or not.
+Note that, to add event functions to a module see use_event." />
 
 
 
@@ -68,7 +81,7 @@
   </head>
 
   <body data-spy="scroll" data-target="#toc">
-    <div class="container template-authors">
+    <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -80,7 +93,7 @@
         <span class="icon-bar"></span>
       </button>
       <span class="navbar-brand">
-        <a class="navbar-link" href="index.html">dymiumModules</a>
+        <a class="navbar-link" href="../index.html">dymiumModules</a>
         <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
       </span>
     </div>
@@ -88,13 +101,13 @@
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="index.html">
+  <a href="../index.html">
     <span class="fas fa fas fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="reference/index.html">Reference</a>
+  <a href="../reference/index.html">Reference</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -110,26 +123,56 @@
       </header>
 
 <div class="row">
-  <div class="contents col-md-9">
+  <div class="col-md-9 contents">
     <div class="page-header">
-      <h1>Authors</h1>
+    <h1>Create a new module, using the recommended folder structure.</h1>
+    
+    <div class="hidden name"><code>use_module.Rd</code></div>
     </div>
 
-    <ul class="list-unstyled">
-      <li>
-        <p><strong>Amarin Siripanich</strong>. Author, maintainer. 
-        </p>
-      </li>
-      <li>
-        <p><strong>Taha Rashidi</strong>. Author. 
-        </p>
-      </li>
-    </ul>
+    <div class="ref-description">
+    <p>This function creates a new module inside the 'modules' folder of your active R project.
+If the 'modules' folder doesn't exist it will create it then adds a new folder
+with the name as specified in the <code>name</code> argument inside the 'modules' folder.
+R scripts to be used across the module will be added which contain the following:</p><ul>
+<li><p>a lgr logger script,</p></li>
+<li><p>a script that contains constant values, and</p></li>
+<li><p>a script for storing helper functions.</p></li>
+</ul>
 
+<p>Since dymium modules use the 'modules' and 'checkmate' packages, if these
+packages are not installed the function will ask whether you would like to
+install them or not.</p>
+<p>Note that, to add event functions to a module see <a href='use_event.html'>use_event</a>.</p>
+    </div>
+
+    <pre class="usage"><span class='fu'>use_module</span>(<span class='no'>name</span>)</pre>
+
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>name</th>
+      <td><p>(<code><a href='https://rdrr.io/r/base/character.html'>character(1)</a></code>)<br />
+A module name.</p></td>
+    </tr>
+    </table>
+
+
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'>
+<span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
+  <span class='co'># Note: running this will create a folder called "modules" and a sub-folder</span>
+  <span class='co'>#       to your working directory within the folder called "demography"</span>
+  <span class='fu'>use_module</span>(<span class='kw'>name</span> <span class='kw'>=</span> <span class='st'>"demography"</span>)
+}</div></pre>
   </div>
-
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+    <nav id="toc" data-toggle="toc" class="sticky-top">
+      <h2 data-toc-skip>Contents</h2>
+    </nav>
+  </div>
 </div>
-
 
 
       <footer>
