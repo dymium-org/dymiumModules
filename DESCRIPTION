@@ -1,5 +1,5 @@
 Package: dymiumModules
-Title: A utility package for `dymium` module management.
+Title: A utility package for `dymium` module management
 Description: 
   'This package contains utility functions for creating modules and downloading 
   dymium modules from GitHub repositories.'
@@ -16,15 +16,18 @@ Suggests:
     testthat (>= 2.1.0),
     dymiumCore,
     covr,
+    modules (>= 0.8.0),
     rJava,
     lgr (>= 0.3.0)
 RoxygenNote: 7.1.0
 Imports: 
-    magrittr,
-    modules (>= 0.8.0),
-    here,
+    magrittr (>= 1.5.0),
+    here (>= 0.1.0),
+    fs (>= 1.3.0),
+    usethis (>= 1.5.0),
     checkmate (>= 2.0.0),
     cli (>= 2.0.2),
-    httr (>= 1.4.0)
+    httr (>= 1.4.0),
+    glue (>= 1.3.0)
 Remotes:
   github::dymium-org/dymiumCore

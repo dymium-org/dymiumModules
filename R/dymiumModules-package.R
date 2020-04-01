@@ -1,4 +1,5 @@
 #' @keywords internal
+#' @importFrom glue glue
 #' @noRd
 "_PACKAGE"
 

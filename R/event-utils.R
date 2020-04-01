@@ -5,16 +5,19 @@
 #' This function creates an event script from the provided event template inside
 #' a module along with a testtthat test script.
 #'
-#' @param name Name of the event.
-#' @param module Name of the module folder to add a event file to. The function
+#' @param name (`character(1)`)\cr
+#'  Name of an event to create. This is also be used as its script name.
+#' @param module (`character(1)`)\cr
+#' Name of the module folder to add a event file to. The function
 #' looks for a folder inside the `modules` folder at the root folder of the active
 #' R project. If the module folder is not found or has not been created this will
 #' return an error.
-#' @param with_comments a logical value. If `TRUE` the generated event script will contain
-#' comments about what each component inside the script does and some recommendations
-#' for the user to follow when authoring an event. For advance users, you may not need
-#' this hence you may specify `FALSE`. If missing, it will be prompted in the console
-#' for you to decide.
+#' @param with_comments (`logical(1)`)\cr
+#'  If `TRUE` the generated event script will contain
+#'  comments about what each component inside the script does and some recommendations
+#'  for the user to follow when authoring an event. For advance users, you may not need
+#'  this hence you may specify `FALSE`. If missing, it will be prompted in the console
+#'  for you to decide.
 #'
 #' @export
 #'
@@ -77,7 +80,7 @@ use_event <- function(name, module, with_comments) {
 #'
 #' Note that, to add event functions to a module see [use_event].
 #'
-#' @template params_module
+#' @template param_modulename
 #'
 #' @export
 #'
@@ -142,7 +145,7 @@ use_module <- function(name) {
 #'  of that module. This function provides an easy way to add a README file using
 #'  the recommended template.
 #'
-#' @param name name of an existing module
+#' @template param_modulename
 #'
 #' @return NULL
 #' @export

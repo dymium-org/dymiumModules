@@ -18,9 +18,19 @@ knitr::opts_chunk$set(
 [![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/dymium-org/dymiumModules?branch=master&svg=true)](https://ci.appveyor.com/project/dymium-org/dymiumModules)
 <!-- badges: end -->
 
-A repository for sharing modules developed with dymiumCore. To share your module 
-in this repository please send in your module as a pull request. 
+This repository contains an R package called `dymiumModules`. The package contains utility functions that facilitate module creation and downloading of dymium compatible modules from any GitHub repository, default to this repo.
 
+To share your module in this repository fork this repository and send in your module as a pull request. Note that all your module scripts should live under the 'modules' folder. 
+
+# Installation
+
+You can install the latest version of dymiumModules from GitHub with:
+
+```{r eval = FALSE}
+remotes::install_github("dymium-org/dymiumModules")
+```
+
+Note that, installing this package doesn't give you the modules in this repository. You must use `download_module()` to download them.
 
 # Module directory
 

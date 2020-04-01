@@ -30,8 +30,8 @@ dymiumModulesRepo <- "dymium-org/dymiumModules"
 #'   download_modules('test', version = '0.0.1')
 #' }
 #'
-download_module <- function(name, repo = dymiumModulesRepo, version, force = FALSE, remove_download = FALSE, .basedir = here::here()) {
-  modules_path <- fs::path(.basedir, "modules")
+download_module <- function(name, repo = dymiumModulesRepo, version, force = FALSE, remove_download = FALSE, path = here::here()) {
+  modules_path <- fs::path(path, "modules")
   usethis::use_directory('modules')
   all_module_files <- get_all_module_files()
   all_versions <- extract_module_versions(name = name, filenames = all_module_files)
@@ -70,7 +70,8 @@ download_module <- function(name, repo = dymiumModulesRepo, version, force = FAL
 #' @description 
 #' Check if a specific module exists in a remote repository.
 #'
-#' @template params_module
+#' @template param_modulename
+#' @template param_repo
 #'
 #' @return a logical value.
 #' @export
@@ -126,7 +127,8 @@ extract_module_versions <- function(name, filenames) {
 
 #' @title Get all version numbers of a module
 #'
-#' @template params_module
+#' @template param_modulename
+#' @template param_repo
 #'
 #' @return a character vector.
 #' @export
@@ -156,7 +158,7 @@ get_module_versions <- function(name, repo = dymiumModulesRepo) {
 
 #' @title Get the names of available modules from a remote repository
 #'
-#' @template params_module
+#' @template param_repo
 #'
 #' @return a character vector.
 #' @export
@@ -178,7 +180,8 @@ get_modules <- function(repo = dymiumModulesRepo) {
 
 #' Get all files from a module
 #' 
-#' @template params_module
+#' @template param_modulename
+#' @template param_repo
 #'
 #' @return a character vector.
 #' @export
@@ -200,7 +203,7 @@ get_module_files <- function(name, repo = dymiumModulesRepo) {
 
 #' Get all files from all modules in a repository.
 #'
-#' @template params_module
+#' @template param_repo
 #'
 #' @return a character vector.
 #' @export

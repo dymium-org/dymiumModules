@@ -10,7 +10,7 @@ download_module(
   version,
   force = FALSE,
   remove_download = FALSE,
-  .basedir = here::here()
+  path = here::here()
 )
 }
 \arguments{

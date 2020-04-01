@@ -7,7 +7,8 @@
 use_module_readme(name)
 }
 \arguments{
-\item{name}{name of an existing module}
+\item{name}{(\code{character(1)})\cr
+A module name.}
 }
 \description{
 Every module must have a main READMD file which serves as the documentation
