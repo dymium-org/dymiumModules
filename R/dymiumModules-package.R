@@ -1,6 +1,5 @@
 #' @keywords internal
-#' @import dymiumCore
-#' @import data.table
+#' @noRd
 "_PACKAGE"
 
 # The following block is used by usethis to automatically manage
