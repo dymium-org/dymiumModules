@@ -16,9 +16,9 @@ package contains utility functions that facilitate module creation and
 downloading of dymium compatible modules from any GitHub repository,
 default to this repo.
 
-To share your module in this repository fork this repository and send in
-your module as a pull request. Note that all your module scripts should
-live under the ‘modules’ folder.
+To share your module in this repository, fork this repository and send
+in your module as a pull request. Note that all your module scripts
+should live under the ‘modules’ folder.
 
 # Installation
 
