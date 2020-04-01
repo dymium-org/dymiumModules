@@ -32,8 +32,8 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
   lg$info('Running Birth')
 
   # get object references for cleaner code
-  Pop <- assign_reference(world, Population)
-  Ind <- assign_reference(world, Individual)
+  Pop <- world$get("Population")
+  Ind <- world$get("Individual")
 
   # check model
   model <- pick_models(model, world, REQUIRED_MODELS)

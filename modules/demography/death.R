@@ -31,8 +31,8 @@ run <- function(world, model = NULL, target = NULL, time_steps = NULL) {
 
   lg$info('Running Death')
 
-  Pop <- assign_reference(world, Population)
-  Ind <- assign_reference(world, Individual)
+  Pop <- world$get("Population")
+  Ind <- world$get("Individual")
 
   # pick models
   model <- pick_models(model, world, REQUIRED_MODELS)
