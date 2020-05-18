@@ -5,10 +5,6 @@
 
 <!-- badges: start -->
 
-[![Travis build
-status](https://travis-ci.org/dymium-org/dymiumModules.svg?branch=master)](https://travis-ci.org/dymium-org/dymiumModules)
-[![AppVeyor build
-status](https://ci.appveyor.com/api/projects/status/github/dymium-org/dymiumModules?branch=master&svg=true)](https://ci.appveyor.com/project/dymium-org/dymiumModules)
 [![R build
 status](https://github.com/dymium-org/dymiumModules/workflows/R-CMD-check/badge.svg)](https://github.com/dymium-org/dymiumModules/actions)
 <!-- badges: end -->
